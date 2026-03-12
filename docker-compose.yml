@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: nexo-db
+    environment:
+      POSTGRES_USER: nexo
+      POSTGRES_PASSWORD: nexo_password
+      POSTGRES_DB: nexo_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexo -d nexo_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nexo-api
+    environment:
+      DATABASE_URL: "postgresql://nexo:nexo_password@postgres:5432/nexo_db?schema=public"
+      JWT_SECRET: "nexo-jwt-secret-cambiar-en-produccion"
+      JWT_EXPIRES: "7d"
+      PORT: "3000"
+      NODE_ENV: "production"
+      FRONTEND_URL: "http://localhost:5173"
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nexo-web
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  uploads:
