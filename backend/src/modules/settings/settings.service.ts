@@ -1,9 +1,47 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
+import { CreatePageDto, UpdatePageDto } from './dto/pages.dto';
 
 @Injectable()
 export class SettingsService {
   constructor(private prisma: PrismaService) {}
+
+  private buildSlug(value: string) {
+    return value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .replace(/-{2,}/g, '-');
+  }
+
+  private preparePageData(data: CreatePageDto | UpdatePageDto) {
+    const title = data.title.trim();
+    const slug = this.buildSlug((data.slug || title).trim());
+    const content = data.content.trim();
+
+    if (!title) {
+      throw new BadRequestException('El título de la página es obligatorio');
+    }
+
+    if (!slug) {
+      throw new BadRequestException('El slug de la página es obligatorio');
+    }
+
+    if (!content) {
+      throw new BadRequestException('El contenido de la página es obligatorio');
+    }
+
+    return {
+      title,
+      slug,
+      content,
+      metaTitle: data.metaTitle?.trim() || null,
+      metaDesc: data.metaDesc?.trim() || null,
+      isActive: data.isActive ?? true,
+    };
+  }
 
   async getAll() {
     const settings = await this.prisma.setting.findMany();
@@ -50,20 +88,40 @@ export class SettingsService {
   }
 
   // Pages
+  async getPublicPages() {
+    return this.prisma.page.findMany({
+      where: { isActive: true },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        metaTitle: true,
+        metaDesc: true,
+        updatedAt: true,
+      },
+    });
+  }
+
   async getPages() {
-    return this.prisma.page.findMany({ orderBy: { createdAt: 'desc' } });
+    return this.prisma.page.findMany({ orderBy: { updatedAt: 'desc' } });
   }
 
   async getPageBySlug(slug: string) {
-    return this.prisma.page.findUnique({ where: { slug } });
+    return this.prisma.page.findFirst({
+      where: {
+        slug,
+        isActive: true,
+      },
+    });
   }
 
-  async createPage(data: { title: string; slug: string; content: string; metaTitle?: string; metaDesc?: string }) {
-    return this.prisma.page.create({ data });
+  async createPage(data: CreatePageDto) {
+    return this.prisma.page.create({ data: this.preparePageData(data) });
   }
 
-  async updatePage(id: string, data: any) {
-    return this.prisma.page.update({ where: { id }, data });
+  async updatePage(id: string, data: UpdatePageDto) {
+    return this.prisma.page.update({ where: { id }, data: this.preparePageData(data) });
   }
 
   async deletePage(id: string) {

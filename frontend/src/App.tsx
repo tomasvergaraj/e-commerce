@@ -33,6 +33,7 @@ import AdminOrdersPage from '@/pages/admin/orders/AdminOrdersPage';
 import AdminOrderDetailPage from '@/pages/admin/orders/AdminOrderDetailPage';
 import AdminCustomersPage from '@/pages/admin/customers/AdminCustomersPage';
 import AdminSettingsPage from '@/pages/admin/settings/AdminSettingsPage';
+import AdminPagesPage from '@/pages/admin/settings/AdminPagesPage';
 import AdminBannersPage from '@/pages/admin/banners/AdminBannersPage';
 import AdminReviewsPage from '@/pages/admin/reviews/AdminReviewsPage';
 import AdminCategoriesPage from '@/pages/admin/settings/AdminCategoriesPage';
@@ -86,6 +87,7 @@ export default function App() {
           <Route path="/admin/pedidos/:id" element={<AdminOrderDetailPage />} />
           <Route path="/admin/clientes" element={<AdminCustomersPage />} />
           <Route path="/admin/configuracion" element={<AdminSettingsPage />} />
+          <Route path="/admin/paginas" element={<AdminPagesPage />} />
           <Route path="/admin/categorias" element={<AdminCategoriesPage />} />
           <Route path="/admin/banners" element={<AdminBannersPage />} />
           <Route path="/admin/resenas" element={<AdminReviewsPage />} />

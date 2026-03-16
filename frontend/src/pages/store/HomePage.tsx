@@ -1,9 +1,19 @@
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Truck, Shield, Headphones, CreditCard } from 'lucide-react';
+import {
+  ArrowRight, Truck, Shield, Headphones, CreditCard, ChevronLeft, ChevronRight,
+} from 'lucide-react';
 import { productsApi, bannersApi, categoriesApi } from '@/api/services';
 import ProductCard from '@/components/store/ProductCard';
-import { Skeleton } from '@/components/common/Loading';
+
+type Banner = {
+  id: string;
+  title: string;
+  subtitle?: string | null;
+  imageUrl: string;
+  linkUrl?: string | null;
+};
 
 export default function HomePage() {
   const { data: banners } = useQuery({ queryKey: ['banners'], queryFn: () => bannersApi.getActive() });
@@ -11,34 +21,141 @@ export default function HomePage() {
   const { data: onSale } = useQuery({ queryKey: ['on-sale'], queryFn: () => productsApi.getOnSale(4) });
   const { data: categories } = useQuery({ queryKey: ['categories-tree'], queryFn: () => categoriesApi.getTree() });
 
-  const bannerList = (banners as any)?.data || banners || [];
+  const bannerList = ((banners as any)?.data || banners || []) as Banner[];
   const featuredList = (featured as any)?.data || featured || [];
   const saleList = (onSale as any)?.data || onSale || [];
   const catList = (categories as any)?.data || categories || [];
 
+  const [activeBanner, setActiveBanner] = useState(0);
+  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
+
+  useEffect(() => {
+    if (bannerList.length === 0) {
+      setActiveBanner(0);
+      return;
+    }
+
+    if (activeBanner >= bannerList.length) {
+      setActiveBanner(0);
+    }
+  }, [activeBanner, bannerList.length]);
+
+  useEffect(() => {
+    if (bannerList.length <= 1 || isCarouselPaused) return;
+
+    const intervalId = window.setInterval(() => {
+      setActiveBanner((current) => (current + 1) % bannerList.length);
+    }, 5000);
+
+    return () => window.clearInterval(intervalId);
+  }, [bannerList.length, isCarouselPaused]);
+
+  const currentBanner = bannerList[activeBanner] ?? bannerList[0];
+  const hasMultipleBanners = bannerList.length > 1;
+
+  const goToPreviousBanner = () => {
+    setActiveBanner((current) => (current === 0 ? bannerList.length - 1 : current - 1));
+  };
+
+  const goToNextBanner = () => {
+    setActiveBanner((current) => (current + 1) % bannerList.length);
+  };
+
   return (
     <div>
       {/* Hero Banner */}
-      {bannerList.length > 0 && (
-        <section className="relative h-[420px] md:h-[500px] overflow-hidden bg-gray-900">
-          <img
-            src={bannerList[0].imageUrl}
-            alt={bannerList[0].title}
-            className="w-full h-full object-cover opacity-80"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-900/80 to-transparent flex items-center">
+      {currentBanner && (
+        <section
+          className="relative h-[420px] md:h-[500px] overflow-hidden bg-gray-950"
+          onMouseEnter={() => setIsCarouselPaused(true)}
+          onMouseLeave={() => setIsCarouselPaused(false)}
+          onFocusCapture={() => setIsCarouselPaused(true)}
+          onBlurCapture={() => setIsCarouselPaused(false)}
+        >
+          <div className="absolute inset-0">
+            {bannerList.map((banner, index) => (
+              <div
+                key={banner.id || `${banner.imageUrl}-${index}`}
+                className={`absolute inset-0 transition-opacity duration-700 ${index === activeBanner ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                aria-hidden={index !== activeBanner}
+              >
+                <img
+                  src={banner.imageUrl}
+                  alt={banner.title}
+                  className="w-full h-full object-cover opacity-80"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,7,18,0.92)_0%,rgba(3,7,18,0.62)_45%,rgba(3,7,18,0.2)_100%)]" />
+              </div>
+            ))}
+          </div>
+
+          <div className="relative z-10 flex h-full items-center">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
-              <div className="max-w-lg">
-                <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">{bannerList[0].title}</h1>
-                {bannerList[0].subtitle && <p className="text-lg text-gray-300 mb-6">{bannerList[0].subtitle}</p>}
-                {bannerList[0].linkUrl && (
-                  <Link to={bannerList[0].linkUrl} className="btn-primary inline-flex items-center gap-2 text-base py-3 px-8">
-                    Ver más <ArrowRight size={18} />
-                  </Link>
+              <div className="max-w-xl">
+                {hasMultipleBanners && (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-medium uppercase tracking-[0.3em] text-white/80 backdrop-blur-sm">
+                    {String(activeBanner + 1).padStart(2, '0')} / {String(bannerList.length).padStart(2, '0')}
+                  </span>
                 )}
+                <h1 className="mt-4 text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">
+                  {currentBanner.title}
+                </h1>
+                {currentBanner.subtitle && (
+                  <p className="text-lg text-gray-200 mb-6 max-w-lg">
+                    {currentBanner.subtitle}
+                  </p>
+                )}
+                <div className="flex flex-wrap items-center gap-3">
+                  {currentBanner.linkUrl && (
+                    <Link to={currentBanner.linkUrl} className="btn-primary inline-flex items-center gap-2 text-base py-3 px-8">
+                      Ver más <ArrowRight size={18} />
+                    </Link>
+                  )}
+                  {hasMultipleBanners && (
+                    <span className="text-sm text-white/70">
+                      Carrusel automático cada 5 segundos
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
+
+          {hasMultipleBanners && (
+            <>
+              <div className="absolute inset-y-0 left-0 right-0 z-10 flex items-center justify-between px-3 md:px-6 pointer-events-none">
+                <button
+                  type="button"
+                  onClick={goToPreviousBanner}
+                  className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/25 text-white backdrop-blur-sm transition-colors hover:bg-black/45"
+                  aria-label="Banner anterior"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <button
+                  type="button"
+                  onClick={goToNextBanner}
+                  className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/25 text-white backdrop-blur-sm transition-colors hover:bg-black/45"
+                  aria-label="Banner siguiente"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+
+              <div className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/15 bg-black/20 px-3 py-2 backdrop-blur-sm">
+                {bannerList.map((banner, index) => (
+                  <button
+                    key={`${banner.id}-indicator`}
+                    type="button"
+                    onClick={() => setActiveBanner(index)}
+                    className={`h-2.5 rounded-full transition-all ${index === activeBanner ? 'w-8 bg-white' : 'w-2.5 bg-white/45 hover:bg-white/70'}`}
+                    aria-label={`Ir al banner ${index + 1}`}
+                    aria-pressed={index === activeBanner}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </section>
       )}
 
@@ -46,7 +163,7 @@ export default function HomePage() {
       <section className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[
+            {[ 
               { icon: Truck, title: 'Envío a todo Chile', desc: 'Despacho rápido y seguro' },
               { icon: Shield, title: 'Compra segura', desc: 'Pago protegido' },
               { icon: Headphones, title: 'Soporte', desc: 'Asistencia personalizada' },

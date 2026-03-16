@@ -1,7 +1,14 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
-import { UpdateProfileDto, CreateAddressDto, UpdateAddressDto, AdminUpdateUserDto } from './dto/users.dto';
-import { PaginationDto, paginate } from '../../common/dto/pagination.dto';
+import {
+  UpdateProfileDto,
+  CreateAddressDto,
+  UpdateAddressDto,
+  AdminUpdateUserDto,
+  UserQueryDto,
+} from './dto/users.dto';
+import { paginate } from '../../common/dto/pagination.dto';
+import { UserRole } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -72,8 +79,13 @@ export class UsersService {
 
   // ── Admin ──
 
-  async findAll(dto: PaginationDto, search?: string) {
-    const where: any = { deletedAt: null };
+  async findAll(query: UserQueryDto) {
+    const where: any = {
+      deletedAt: null,
+      role: UserRole.CUSTOMER,
+    };
+
+    const search = query.search?.trim();
     if (search) {
       where.OR = [
         { email: { contains: search, mode: 'insensitive' } },
@@ -85,9 +97,9 @@ export class UsersService {
     const [items, total] = await Promise.all([
       this.prisma.user.findMany({
         where,
-        skip: dto.skip,
-        take: dto.limit,
-        orderBy: { createdAt: dto.sortOrder || 'desc' },
+        skip: query.skip,
+        take: query.limit,
+        orderBy: { createdAt: query.sortOrder || 'desc' },
         select: {
           id: true, email: true, firstName: true, lastName: true,
           phone: true, role: true, status: true, createdAt: true,
@@ -97,7 +109,7 @@ export class UsersService {
       this.prisma.user.count({ where }),
     ]);
 
-    return paginate(items, total, dto);
+    return paginate(items, total, query);
   }
 
   async adminUpdateUser(userId: string, dto: AdminUpdateUserDto) {

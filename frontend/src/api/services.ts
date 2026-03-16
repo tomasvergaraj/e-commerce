@@ -109,6 +109,7 @@ export const wishlistApi = {
 // ── Reviews ──
 export const reviewsApi = {
   getByProduct: (productId: string) => api.get(`/reviews/product/${productId}`),
+  getEligibility: (productId: string) => api.get(`/reviews/eligibility/${productId}`),
   create: (data: any) => api.post('/reviews', data),
   adminGetAll: () => api.get('/reviews/admin/all'),
   adminGetPending: () => api.get('/reviews/admin/pending'),
@@ -128,6 +129,7 @@ export const bannersApi = {
 // ── Settings ──
 export const settingsApi = {
   getPublic: () => api.get('/settings/public'),
+  getPublicPages: () => api.get('/settings/pages'),
   getPage: (slug: string) => api.get(`/settings/pages/${slug}`),
   adminGetAll: () => api.get('/settings/admin/all'),
   bulkUpdate: (data: any) => api.put('/settings/admin/bulk', data),

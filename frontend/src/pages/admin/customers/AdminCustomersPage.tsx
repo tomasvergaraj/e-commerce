@@ -7,9 +7,9 @@ import { PageLoader } from '@/components/common/Loading';
 
 export default function AdminCustomersPage() {
   const [search, setSearch] = useState('');
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ['admin-customers', search],
-    queryFn: () => usersApi.list({ page: 1, limit: 50, search }),
+    queryFn: () => usersApi.list({ page: 1, limit: 50, search: search.trim() || undefined }),
   });
   const result = (data as any)?.data || data || { items: [] };
 
@@ -21,32 +21,44 @@ export default function AdminCustomersPage() {
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nombre o email..."
           className="input-field pl-10" />
       </div>
-      {isLoading ? <PageLoader /> : (
+      {isLoading ? <PageLoader /> : isError ? (
+        <div className="card p-6">
+          <p className="font-medium text-red-600 dark:text-red-400">No se pudo cargar la lista de clientes.</p>
+          <p className="text-sm text-gray-500 mt-1">{(error as any)?.message || 'Intenta nuevamente en unos segundos.'}</p>
+        </div>
+      ) : (
         <div className="card overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-800">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium">Cliente</th>
-                <th className="text-left px-4 py-3 font-medium">Email</th>
-                <th className="text-left px-4 py-3 font-medium">Rol</th>
-                <th className="text-left px-4 py-3 font-medium">Estado</th>
-                <th className="text-left px-4 py-3 font-medium">Pedidos</th>
-                <th className="text-left px-4 py-3 font-medium">Registro</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {result.items.map((user: any) => (
-                <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                  <td className="px-4 py-3 font-medium">{user.firstName} {user.lastName}</td>
-                  <td className="px-4 py-3 text-gray-500">{user.email}</td>
-                  <td className="px-4 py-3"><span className="badge bg-gray-100 text-gray-700">{user.role}</span></td>
-                  <td className="px-4 py-3"><span className={`badge ${user.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{user.status}</span></td>
-                  <td className="px-4 py-3">{user._count?.orders || 0}</td>
-                  <td className="px-4 py-3 text-xs text-gray-500">{formatDate(user.createdAt)}</td>
+          {result.items.length === 0 ? (
+            <div className="p-8 text-center">
+              <p className="font-medium text-gray-900 dark:text-white">No hay clientes para mostrar.</p>
+              <p className="text-sm text-gray-500 mt-1">Prueba con otra búsqueda o crea clientes desde la tienda pública.</p>
+            </div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 dark:bg-gray-800">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium">Cliente</th>
+                  <th className="text-left px-4 py-3 font-medium">Email</th>
+                  <th className="text-left px-4 py-3 font-medium">Rol</th>
+                  <th className="text-left px-4 py-3 font-medium">Estado</th>
+                  <th className="text-left px-4 py-3 font-medium">Pedidos</th>
+                  <th className="text-left px-4 py-3 font-medium">Registro</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                {result.items.map((user: any) => (
+                  <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td className="px-4 py-3 font-medium">{user.firstName} {user.lastName}</td>
+                    <td className="px-4 py-3 text-gray-500">{user.email}</td>
+                    <td className="px-4 py-3"><span className="badge bg-gray-100 text-gray-700">{user.role}</span></td>
+                    <td className="px-4 py-3"><span className={`badge ${user.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{user.status}</span></td>
+                    <td className="px-4 py-3">{user._count?.orders || 0}</td>
+                    <td className="px-4 py-3 text-xs text-gray-500">{formatDate(user.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       )}
     </div>

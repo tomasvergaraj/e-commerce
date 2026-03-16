@@ -1,13 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { mkdirSync } from 'fs';
+import { resolve } from 'path';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const config = app.get(ConfigService);
 
   // Global prefix
@@ -18,6 +21,10 @@ async function bootstrap() {
     origin: config.get<string>('FRONTEND_URL', 'http://localhost:5173'),
     credentials: true,
   });
+
+  const uploadsPath = resolve(process.cwd(), 'uploads');
+  mkdirSync(uploadsPath, { recursive: true });
+  app.useStaticAssets(uploadsPath, { prefix: '/uploads/' });
 
   // Global pipes
   app.useGlobalPipes(

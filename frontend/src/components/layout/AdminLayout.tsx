@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import {
   LayoutDashboard, Package, ShoppingBag, Users, Settings, Image,
-  Star, Tag, Menu, X, ChevronLeft, LogOut,
+  Star, Tag, Menu, X, ChevronLeft, LogOut, FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
@@ -14,6 +14,7 @@ const menuItems = [
   { path: '/admin/pedidos', label: 'Pedidos', icon: ShoppingBag },
   { path: '/admin/clientes', label: 'Clientes', icon: Users },
   { path: '/admin/banners', label: 'Banners', icon: Image },
+  { path: '/admin/paginas', label: 'Páginas', icon: FileText },
   { path: '/admin/resenas', label: 'Reseñas', icon: Star },
   { path: '/admin/configuracion', label: 'Configuración', icon: Settings },
 ];

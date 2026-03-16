@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingCart } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import { useCartStore } from '@/stores/cartStore';
+import WishlistButton from '@/components/store/WishlistButton';
 import toast from 'react-hot-toast';
 
 interface ProductCardProps {
@@ -43,6 +44,11 @@ export default function ProductCard({ product }: ProductCardProps) {
             Destacado
           </span>
         )}
+        <WishlistButton
+          productId={product.id}
+          className="absolute top-3 right-3 h-10 w-10 rounded-full shadow-md backdrop-blur-sm"
+          iconSize={18}
+        />
         <button
           onClick={handleAddToCart}
           className="absolute bottom-3 right-3 bg-white dark:bg-gray-800 p-2.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all hover:bg-primary-500 hover:text-white"

@@ -1,22 +1,53 @@
-import { useQuery } from '@tanstack/react-query';
-import { useParams, Link } from 'react-router-dom';
-import { useState } from 'react';
-import { ChevronRight, Heart, ShoppingCart, Minus, Plus, Star, Truck } from 'lucide-react';
-import { productsApi, wishlistApi } from '@/api/services';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams, Link, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import {
+  ChevronRight, ShoppingCart, Minus, Plus, Star, Truck, Loader2, MessageSquare,
+} from 'lucide-react';
+import { productsApi, reviewsApi } from '@/api/services';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
 import { formatPrice } from '@/lib/utils';
 import ProductCard from '@/components/store/ProductCard';
+import WishlistButton from '@/components/store/WishlistButton';
 import { PageLoader } from '@/components/common/Loading';
 import toast from 'react-hot-toast';
 
+type ReviewFormValues = {
+  title: string;
+  comment: string;
+};
+
+type ReviewEligibility = {
+  canReview: boolean;
+  hasDeliveredPurchase: boolean;
+  reason: string;
+  existingReview?: {
+    id: string;
+    isApproved: boolean;
+    createdAt: string;
+  } | null;
+  deliveredOrder?: {
+    id: string;
+    orderNumber: string;
+    deliveredAt?: string | null;
+  } | null;
+};
+
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
+  const location = useLocation();
+  const queryClient = useQueryClient();
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [reviewRating, setReviewRating] = useState(5);
   const addItem = useCartStore((s) => s.addItem);
   const { isAuthenticated } = useAuthStore();
+  const { register, handleSubmit, reset } = useForm<ReviewFormValues>({
+    defaultValues: { title: '', comment: '' },
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ['product', slug],
@@ -31,7 +62,46 @@ export default function ProductDetailPage() {
   });
 
   const product = (data as any)?.data || data;
+
+  const { data: reviewEligibilityData, isLoading: isReviewEligibilityLoading } = useQuery({
+    queryKey: ['review-eligibility', product?.id],
+    queryFn: () => reviewsApi.getEligibility(product.id),
+    enabled: isAuthenticated && !!product?.id,
+  });
+
   const relatedList = (related as any)?.data || related || [];
+  const reviewEligibility = ((reviewEligibilityData as any)?.data || reviewEligibilityData || null) as ReviewEligibility | null;
+
+  useEffect(() => {
+    if (location.hash !== '#reviews' || !product?.id) return;
+
+    const timerId = window.setTimeout(() => {
+      document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+
+    return () => window.clearTimeout(timerId);
+  }, [location.hash, product?.id]);
+
+  const submitReviewMutation = useMutation({
+    mutationFn: async (values: ReviewFormValues) => reviewsApi.create({
+      productId: product.id,
+      rating: reviewRating,
+      title: values.title.trim() || undefined,
+      comment: values.comment.trim() || undefined,
+    }),
+    onSuccess: async () => {
+      toast.success('Reseña enviada. Se publicará después de ser aprobada.');
+      reset();
+      setReviewRating(5);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['review-eligibility', product.id] }),
+        queryClient.invalidateQueries({ queryKey: ['product', slug] }),
+      ]);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'No se pudo enviar tu reseña');
+    },
+  });
 
   if (isLoading) return <PageLoader />;
   if (!product) return <div className="text-center py-20">Producto no encontrado</div>;
@@ -59,14 +129,9 @@ export default function ProductDetailPage() {
     }
   };
 
-  const handleWishlist = async () => {
-    if (!isAuthenticated) { toast.error('Inicia sesión para usar favoritos'); return; }
-    try {
-      const res = await wishlistApi.toggle(product.id);
-      const d = (res as any)?.data || res;
-      toast.success(d.message || (d.added ? 'Agregado a favoritos' : 'Eliminado de favoritos'));
-    } catch { toast.error('Error'); }
-  };
+  const onSubmitReview = handleSubmit(async (values) => {
+    await submitReviewMutation.mutateAsync(values);
+  });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -194,14 +259,18 @@ export default function ProductDetailPage() {
               <ShoppingCart size={20} />
               {displayStock > 0 ? 'Agregar al carrito' : 'Agotado'}
             </button>
-            <button onClick={handleWishlist} className="btn-outline p-3">
-              <Heart size={20} />
-            </button>
+            <WishlistButton
+              productId={product.id}
+              className="h-12 w-12 rounded-lg p-0"
+              activeClassName="h-12 w-12 rounded-lg border border-red-200 bg-red-50 text-red-500 dark:border-red-900/60 dark:bg-red-950/40"
+              inactiveClassName="btn-outline h-12 w-12 rounded-lg p-0"
+              iconSize={20}
+            />
           </div>
 
           {/* Shipping info */}
           <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm">
-            <Truck size={20} className="text-primary-500 shrink-0" />
+              <Truck size={20} className="text-primary-500 shrink-0" />
             <div>
               <p className="font-medium">Envío a todo Chile</p>
               <p className="text-gray-500 text-xs">Despacho en 1-5 días hábiles</p>
@@ -222,9 +291,101 @@ export default function ProductDetailPage() {
       )}
 
       {/* Reviews */}
-      {product.reviews?.length > 0 && (
-        <div className="mt-12">
-          <h2 className="text-xl font-bold mb-6">Reseñas ({product.reviewCount})</h2>
+      <div id="reviews" className="mt-12">
+        <div className="flex items-center gap-2 mb-6">
+          <MessageSquare size={20} className="text-primary-500" />
+          <h2 className="text-xl font-bold">Reseñas ({product.reviewCount})</h2>
+        </div>
+
+        <div className="card p-6 max-w-2xl mb-6">
+          {!isAuthenticated ? (
+            <>
+              <h3 className="font-semibold mb-2">Inicia sesión para dejar tu reseña</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Solo los clientes con pedidos entregados pueden reseñar este producto.
+              </p>
+              <Link to="/login" state={{ from: location }} className="btn-primary inline-flex items-center gap-2">
+                Iniciar sesión
+              </Link>
+            </>
+          ) : isReviewEligibilityLoading ? (
+            <div className="flex items-center gap-3 text-sm text-gray-500">
+              <Loader2 size={16} className="animate-spin" />
+              Revisando si ya puedes dejar una reseña...
+            </div>
+          ) : reviewEligibility?.canReview ? (
+            <form onSubmit={onSubmitReview} className="space-y-5">
+              <div>
+                <h3 className="font-semibold">Tu opinión sobre este producto</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Tu reseña se enviará para moderación y se publicará una vez aprobada.
+                </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Calificación</label>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setReviewRating(star)}
+                      className="p-1 transition-transform hover:scale-110"
+                      aria-label={`Calificar con ${star} estrellas`}
+                    >
+                      <Star
+                        size={24}
+                        className={star <= reviewRating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}
+                      />
+                    </button>
+                  ))}
+                  <span className="ml-2 text-sm text-gray-500">{reviewRating}/5</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-1 block">Título</label>
+                <input
+                  {...register('title')}
+                  maxLength={120}
+                  className="input-field"
+                  placeholder="Resume tu experiencia"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-1 block">Comentario</label>
+                <textarea
+                  {...register('comment')}
+                  rows={4}
+                  className="input-field"
+                  placeholder="Cuéntale a otros clientes cómo fue tu experiencia con este producto"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={submitReviewMutation.isPending}
+                className="btn-primary inline-flex items-center gap-2"
+              >
+                {submitReviewMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : null}
+                Enviar reseña
+              </button>
+            </form>
+          ) : (
+            <>
+              <h3 className="font-semibold mb-2">Aún no puedes reseñar este producto</h3>
+              <p className="text-sm text-gray-500">{reviewEligibility?.reason || 'Todavía no cumples las condiciones para reseñar.'}</p>
+              {reviewEligibility?.deliveredOrder?.orderNumber && (
+                <p className="text-xs text-gray-400 mt-3">
+                  Pedido asociado: {reviewEligibility.deliveredOrder.orderNumber}
+                </p>
+              )}
+            </>
+          )}
+        </div>
+
+        {product.reviews?.length > 0 ? (
           <div className="space-y-4 max-w-2xl">
             {product.reviews.map((review: any) => (
               <div key={review.id} className="card p-4">
@@ -241,8 +402,12 @@ export default function ProductDetailPage() {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="card p-6 max-w-2xl text-sm text-gray-500">
+            Aún no hay reseñas aprobadas para este producto.
+          </div>
+        )}
+      </div>
 
       {/* Related */}
       {relatedList.length > 0 && (

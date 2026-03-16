@@ -3,10 +3,15 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { UpdateProfileDto, CreateAddressDto, UpdateAddressDto, AdminUpdateUserDto } from './dto/users.dto';
+import {
+  UpdateProfileDto,
+  CreateAddressDto,
+  UpdateAddressDto,
+  AdminUpdateUserDto,
+  UserQueryDto,
+} from './dto/users.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard, Roles } from '../../common/guards/roles.guard';
-import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -56,8 +61,8 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPER_ADMIN')
   @Get('admin/list')
-  findAll(@Query() dto: PaginationDto, @Query('search') search?: string) {
-    return this.usersService.findAll(dto, search);
+  findAll(@Query() query: UserQueryDto) {
+    return this.usersService.findAll(query);
   }
 
   @ApiBearerAuth()

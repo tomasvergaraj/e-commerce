@@ -3,6 +3,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SettingsService } from './settings.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard, Roles } from '../../common/guards/roles.guard';
+import { CreatePageDto, UpdatePageDto } from './dto/pages.dto';
 
 @ApiTags('Settings')
 @Controller('settings')
@@ -11,6 +12,9 @@ export class SettingsController {
 
   @Get('public')
   getPublicSettings() { return this.settingsService.getAll(); }
+
+  @Get('pages')
+  getPublicPages() { return this.settingsService.getPublicPages(); }
 
   @Get('pages/:slug')
   getPage(@Param('slug') slug: string) { return this.settingsService.getPageBySlug(slug); }
@@ -30,11 +34,11 @@ export class SettingsController {
 
   @ApiBearerAuth() @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMIN', 'SUPER_ADMIN')
   @Post('admin/pages')
-  createPage(@Body() data: any) { return this.settingsService.createPage(data); }
+  createPage(@Body() data: CreatePageDto) { return this.settingsService.createPage(data); }
 
   @ApiBearerAuth() @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMIN', 'SUPER_ADMIN')
   @Put('admin/pages/:id')
-  updatePage(@Param('id') id: string, @Body() data: any) { return this.settingsService.updatePage(id, data); }
+  updatePage(@Param('id') id: string, @Body() data: UpdatePageDto) { return this.settingsService.updatePage(id, data); }
 
   @ApiBearerAuth() @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMIN', 'SUPER_ADMIN')
   @Delete('admin/pages/:id')

@@ -1,5 +1,6 @@
-import { IsString, IsOptional, IsEmail, IsEnum, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsBoolean } from 'class-validator';
 import { UserStatus } from '@prisma/client';
+import { PaginationDto } from '../../../common/dto/pagination.dto';
 
 export class UpdateProfileDto {
   @IsOptional() @IsString() firstName?: string;
@@ -29,4 +30,8 @@ export class AdminUpdateUserDto {
   @IsOptional() @IsEnum(UserStatus) status?: UserStatus;
   @IsOptional() @IsString() firstName?: string;
   @IsOptional() @IsString() lastName?: string;
+}
+
+export class UserQueryDto extends PaginationDto {
+  @IsOptional() @IsString() search?: string;
 }

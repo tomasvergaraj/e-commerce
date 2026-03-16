@@ -1,8 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart, Trash2 } from 'lucide-react';
 import { wishlistApi } from '@/api/services';
 import { useCartStore } from '@/stores/cartStore';
+import { useWishlistStore } from '@/stores/wishlistStore';
 import { formatPrice } from '@/lib/utils';
 import { PageLoader } from '@/components/common/Loading';
 import EmptyState from '@/components/common/EmptyState';
@@ -11,12 +13,21 @@ import toast from 'react-hot-toast';
 export default function WishlistPage() {
   const qc = useQueryClient();
   const addItem = useCartStore((s) => s.addItem);
+  const { setIds, setInWishlist } = useWishlistStore();
   const { data, isLoading } = useQuery({ queryKey: ['wishlist'], queryFn: () => wishlistApi.getAll() });
   const items = (data as any)?.data || data || [];
 
+  useEffect(() => {
+    setIds(items.map((item: any) => item.productId));
+  }, [items, setIds]);
+
   const removeMut = useMutation({
     mutationFn: (productId: string) => wishlistApi.remove(productId),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['wishlist'] }); toast.success('Eliminado'); },
+    onSuccess: (_data, productId) => {
+      setInWishlist(productId, false);
+      qc.invalidateQueries({ queryKey: ['wishlist'] });
+      toast.success('Eliminado');
+    },
   });
 
   if (isLoading) return <PageLoader />;

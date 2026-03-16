@@ -5,7 +5,7 @@ Sistema de e-commerce completo desarrollado por Nexo Spa. Plataforma genérica y
 ## Stack Tecnológico
 
 | Capa | Tecnología |
-|------|-----------|
+|------|------------|
 | Frontend | React 18, Vite, TypeScript, Tailwind CSS, React Router, TanStack Query, Zustand, React Hook Form |
 | Backend | Node.js, NestJS, TypeScript, Prisma ORM, JWT |
 | Base de datos | PostgreSQL 16 |
@@ -13,28 +13,29 @@ Sistema de e-commerce completo desarrollado por Nexo Spa. Plataforma genérica y
 
 ## Estructura del proyecto
 
-```
+```text
 nexo/
-├── backend/              # API NestJS
-│   ├── prisma/           # Schema, migraciones, seed
-│   └── src/
-│       ├── common/       # Filtros, guards, interceptors, Prisma
-│       └── modules/      # Auth, Users, Products, Cart, Orders, etc.
-├── frontend/             # App React + Vite
-│   └── src/
-│       ├── api/          # Cliente HTTP y servicios
-│       ├── components/   # Componentes reutilizables
-│       ├── pages/        # Páginas (store, account, admin)
-│       ├── stores/       # Zustand stores
-│       └── lib/          # Utilidades
-├── docker-compose.yml
-├── .env.example
-└── README.md
+|-- backend/              # API NestJS
+|   |-- prisma/           # Schema, migraciones, seed
+|   `-- src/
+|       |-- common/       # Filtros, guards, interceptors, Prisma
+|       `-- modules/      # Auth, Users, Products, Cart, Orders, etc.
+|-- frontend/             # App React + Vite
+|   `-- src/
+|       |-- api/          # Cliente HTTP y servicios
+|       |-- components/   # Componentes reutilizables
+|       |-- pages/        # Páginas (store, account, admin)
+|       |-- stores/       # Zustand stores
+|       `-- lib/          # Utilidades
+|-- docker-compose.yml
+|-- .env.example
+`-- README.md
 ```
 
 ## Inicio rápido (Desarrollo)
 
 ### Requisitos previos
+
 - Node.js 20+
 - PostgreSQL 16 (o Docker)
 - npm o yarn
@@ -74,8 +75,9 @@ npm run db:seed
 npm run start:dev
 ```
 
-El backend estará en: http://localhost:3000
-Swagger docs en: http://localhost:3000/api/docs
+El backend estará en: http://localhost:3000  
+Swagger docs en: http://localhost:3000/api/docs  
+También puedes iniciarlo desde la raíz con: `npm run start:dev`
 
 ### 4. Frontend
 
@@ -85,7 +87,14 @@ npm install
 npm run dev
 ```
 
-La tienda estará en: http://localhost:5173
+La tienda estará en: http://localhost:5173  
+También puedes iniciarla desde la raíz con: `npm run dev:frontend`
+
+Si quieres levantar frontend y backend juntos desde la raíz:
+
+```bash
+npm run dev
+```
 
 ## Inicio con Docker Compose (producción)
 
@@ -94,6 +103,7 @@ docker-compose up -d --build
 ```
 
 Luego ejecutar el seed:
+
 ```bash
 docker exec nexo-api npx prisma db seed
 ```
@@ -103,47 +113,65 @@ Acceder en: http://localhost:5173
 ## Credenciales por defecto (seed)
 
 | Rol | Email | Contraseña |
-|-----|-------|-----------|
+|-----|-------|------------|
 | Super Admin | admin@nexo.cl | admin123 |
 | Cliente | juan@test.cl | cliente123 |
 | Cliente | maria@test.cl | cliente123 |
 
+## Novedades recientes
+
+- `npm run dev` desde la raíz levanta frontend y backend al mismo tiempo
+- Home con carrusel de banners activos
+- Banners editables desde admin con subida, recorte y vista previa de imágenes
+- Páginas informativas administrables desde el panel con navegación pública dinámica
+- Footer público conectado a configuración, redes sociales y datos reales de la tienda
+- Reseñas habilitadas sólo para clientes con compras entregadas
+- Favoritos con corazón animado y estado visual sincronizado
+- Transición suave entre light mode y dark mode
+
 ## Módulos implementados
 
 ### Tienda Pública
-- Home con banners, productos destacados y en oferta
+
+- Home con carrusel de banners, productos destacados y en oferta
 - Catálogo con filtros (categoría, precio, marca, estado)
 - Ordenamiento (precio, nombre, fecha, ventas)
 - Paginación
-- Detalle de producto con variantes, imágenes, reseñas
+- Detalle de producto con variantes, imágenes, reseñas y favoritos
 - Productos relacionados
 - Buscador
 - Carrito de compras (invitado y autenticado)
 - Checkout completo (dirección, envío, pago)
-- Páginas informativas (políticas, FAQ, etc.)
-- Dark mode
+- Páginas informativas dinámicas (políticas, FAQ, etc.) con diseño editorial
+- Footer y enlaces sociales conectados a la configuración pública
+- Dark mode con transición visual
 
 ### Panel de Cliente
+
 - Perfil y datos personales
 - Direcciones múltiples
 - Historial de pedidos con detalle
 - Seguimiento de pedidos
-- Favoritos / wishlist
+- Favoritos / wishlist con feedback visual
+- Reseñas de productos después de pedidos entregados
 - Cambio de contraseña
 
 ### Panel Administrativo
+
 - Dashboard con métricas (ventas, pedidos, stock)
 - CRUD de productos con variantes
 - Gestión de categorías
 - Gestión de pedidos con cambio de estado
 - Historial de estados por pedido
-- Gestión de clientes
-- Banners
+- Gestión de clientes con búsqueda
+- Banners con edición completa y recorte de imágenes
 - Moderación de reseñas
-- Configuración de tienda
+- Configuración de tienda y redes sociales
+- Gestión de páginas informativas / CMS
 - Cupones de descuento
 
 ### Backend API
+
 - Autenticación JWT con registro/login
 - RBAC (Customer, Admin, Super Admin)
 - Validación con class-validator y DTOs
@@ -151,7 +179,9 @@ Acceder en: http://localhost:5173
 - Respuestas estandarizadas
 - Paginación
 - Soft delete
-- Upload de archivos
+- Upload de archivos e imágenes servido desde `/uploads`
+- Endpoints públicos para configuración y páginas informativas
+- Validación de elegibilidad para reseñas post-entrega
 - Swagger API docs
 - Pasarela de pago mock (desacoplada para integración real)
 
@@ -180,6 +210,7 @@ Modelos principales: User, Address, Category, Product, ProductImage, ProductVari
 ## Extensibilidad
 
 ### Integración de pasarela de pago real
+
 El módulo de pagos usa una arquitectura desacoplada. Para integrar Webpay, Mercado Pago, Stripe u otro:
 
 1. Crear un nuevo service en `backend/src/modules/payments/` (ej: `webpay.service.ts`)
@@ -188,13 +219,17 @@ El módulo de pagos usa una arquitectura desacoplada. Para integrar Webpay, Merc
 4. El enum `PaymentMethod` ya incluye las opciones
 
 ### Facturación
+
 El modelo de Order incluye datos del cliente y dirección. Para agregar facturación:
+
 1. Crear modelo `Invoice` en Prisma
 2. Crear módulo NestJS `invoices`
 3. Integrar con SII o proveedor de facturación electrónica
 
 ### Multi-sucursal / Multi-bodega
+
 Para agregar soporte:
+
 1. Crear modelos `Branch` y `Warehouse`
 2. Relacionar stock de productos por bodega
 3. Ajustar la lógica de despacho y disponibilidad
@@ -202,14 +237,26 @@ Para agregar soporte:
 ## Scripts útiles
 
 ```bash
-# Backend
+# Raíz del proyecto
+npm run dev                # Frontend + backend en desarrollo
+npm run dev:full           # Alias explícito del stack completo
+npm run start:dev          # Backend en desarrollo
+npm run dev:frontend       # Alias explícito para frontend
+npm run dev:backend        # Alias explícito para backend
+npm run build:frontend     # Build del frontend
+npm run build:backend      # Build del backend
+npm run db:generate        # Prisma generate en backend
+npm run db:migrate         # Prisma migrate dev en backend
+npm run db:seed            # Seed en backend
+
+# Backend (desde /backend)
 npm run start:dev          # Desarrollo con hot reload
 npm run build              # Build producción
 npm run db:migrate         # Ejecutar migraciones
 npm run db:seed            # Ejecutar seed
 npm run db:studio          # Prisma Studio (GUI BD)
 
-# Frontend
+# Frontend (desde /frontend)
 npm run dev                # Desarrollo
 npm run build              # Build producción
 npm run preview            # Preview del build

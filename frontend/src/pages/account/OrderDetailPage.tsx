@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Star } from 'lucide-react';
 import { ordersApi } from '@/api/services';
 import { formatPrice, formatDateTime, getOrderStatusLabel, getOrderStatusColor, getPaymentStatusLabel } from '@/lib/utils';
 import { PageLoader } from '@/components/common/Loading';
@@ -59,6 +59,15 @@ export default function OrderDetailPage() {
               <p className="font-medium text-sm">{item.productName}</p>
               {item.variantName && <p className="text-xs text-gray-500">{item.variantName}</p>}
               <p className="text-xs text-gray-500">SKU: {item.sku}</p>
+              {order.status === 'DELIVERED' && item.product?.slug && (
+                <Link
+                  to={`/productos/${item.product.slug}#reviews`}
+                  className="inline-flex items-center gap-1 text-xs text-primary-500 hover:underline mt-2"
+                >
+                  <Star size={12} />
+                  Escribir reseña
+                </Link>
+              )}
             </div>
             <div className="text-right">
               <p className="text-sm">{formatPrice(item.price)} x {item.quantity}</p>

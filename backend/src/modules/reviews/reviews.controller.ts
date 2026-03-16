@@ -16,6 +16,12 @@ export class ReviewsController {
   }
 
   @ApiBearerAuth() @UseGuards(JwtAuthGuard)
+  @Get('eligibility/:productId')
+  getEligibility(@Request() req: any, @Param('productId') productId: string) {
+    return this.reviewsService.getEligibility(req.user.sub, productId);
+  }
+
+  @ApiBearerAuth() @UseGuards(JwtAuthGuard)
   @Post()
   create(@Request() req: any, @Body() dto: CreateReviewDto) {
     return this.reviewsService.create(req.user.sub, dto);

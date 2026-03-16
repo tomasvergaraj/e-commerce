@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { CreateReviewDto } from './dto/reviews.dto';
 
@@ -14,11 +14,79 @@ export class ReviewsService {
     });
   }
 
-  async create(userId: string, dto: CreateReviewDto) {
-    const existing = await this.prisma.review.findUnique({
-      where: { productId_userId: { productId: dto.productId, userId } },
+  async getEligibility(userId: string, productId: string) {
+    const product = await this.prisma.product.findFirst({
+      where: { id: productId, deletedAt: null },
+      select: { id: true, name: true },
     });
-    if (existing) throw new BadRequestException('Ya dejaste una reseña para este producto');
+
+    if (!product) {
+      throw new NotFoundException('Producto no encontrado');
+    }
+
+    const existingReview = await this.prisma.review.findUnique({
+      where: { productId_userId: { productId, userId } },
+      select: {
+        id: true,
+        isApproved: true,
+        createdAt: true,
+      },
+    });
+
+    if (existingReview) {
+        return {
+          canReview: false,
+          hasDeliveredPurchase: true,
+          reason: existingReview.isApproved
+          ? 'Ya dejaste una reseña para este producto.'
+          : 'Tu reseña ya fue enviada y está pendiente de aprobación.',
+          existingReview,
+        };
+    }
+
+    const deliveredOrderItem = await this.prisma.orderItem.findFirst({
+      where: {
+        productId,
+        order: {
+          userId,
+          status: 'DELIVERED',
+        },
+      },
+      select: {
+        id: true,
+        order: {
+          select: {
+            id: true,
+            orderNumber: true,
+            deliveredAt: true,
+          },
+        },
+      },
+    });
+
+    if (!deliveredOrderItem) {
+      return {
+        canReview: false,
+        hasDeliveredPurchase: false,
+        reason: 'Podrás dejar una reseña cuando alguno de tus pedidos de este producto figure como entregado.',
+        existingReview: null,
+      };
+    }
+
+    return {
+      canReview: true,
+      hasDeliveredPurchase: true,
+      reason: 'Puedes dejar una reseña para este producto.',
+      existingReview: null,
+      deliveredOrder: deliveredOrderItem.order,
+    };
+  }
+
+  async create(userId: string, dto: CreateReviewDto) {
+    const eligibility = await this.getEligibility(userId, dto.productId);
+    if (!eligibility.canReview) {
+      throw new BadRequestException(eligibility.reason);
+    }
 
     const review = await this.prisma.review.create({
       data: { ...dto, userId, isApproved: false },

@@ -1,0 +1,17 @@
+{
+  "name": "nexo",
+  "private": true,
+  "description": "Root scripts for the Nexo e-commerce monorepo",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:full": "node scripts/dev.mjs",
+    "start:dev": "npm --prefix backend run start:dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run start:dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:backend": "npm --prefix backend run build",
+    "db:generate": "npm --prefix backend run db:generate",
+    "db:migrate": "npm --prefix backend run db:migrate",
+    "db:seed": "npm --prefix backend run db:seed"
+  }
+}

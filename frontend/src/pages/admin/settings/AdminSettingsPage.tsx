@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { Save } from 'lucide-react';
+import { FileText, Save } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { settingsApi } from '@/api/services';
 import { PageLoader } from '@/components/common/Loading';
 import toast from 'react-hot-toast';
@@ -43,6 +44,19 @@ export default function AdminSettingsPage() {
           <div><label className="text-sm font-medium mb-1 block">Facebook</label><input {...register('social_facebook')} className="input-field" /></div>
           <div><label className="text-sm font-medium mb-1 block">Twitter / X</label><input {...register('social_twitter')} className="input-field" /></div>
           <div><label className="text-sm font-medium mb-1 block">LinkedIn</label><input {...register('social_linkedin')} className="input-field" /></div>
+        </div>
+
+        <div className="card p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="font-semibold">Páginas informativas</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Edita políticas, preguntas frecuentes y otras páginas editoriales desde el administrador CMS.
+            </p>
+          </div>
+          <Link to="/admin/paginas" className="btn-outline inline-flex items-center gap-2">
+            <FileText size={16} />
+            Administrar páginas
+          </Link>
         </div>
 
         <button type="submit" disabled={mutation.isPending} className="btn-primary flex items-center gap-2">
