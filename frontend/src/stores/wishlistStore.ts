@@ -16,6 +16,14 @@ interface WishlistState {
   clear: () => void;
 }
 
+function normalizeIds(ids: string[]) {
+  return Array.from(new Set(ids));
+}
+
+function haveSameIds(current: string[], next: string[]) {
+  return current.length === next.length && current.every((id, index) => id === next[index]);
+}
+
 export const useWishlistStore = create<WishlistState>((set, get) => ({
   ids: [],
   isLoaded: false,
@@ -48,9 +56,17 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       throw error;
     }
   },
-  setIds: (ids) => set({
-    ids: Array.from(new Set(ids)),
-    isLoaded: true,
+  setIds: (ids) => set((state) => {
+    const nextIds = normalizeIds(ids);
+
+    if (state.isLoaded && haveSameIds(state.ids, nextIds)) {
+      return state;
+    }
+
+    return {
+      ids: nextIds,
+      isLoaded: true,
+    };
   }),
   setInWishlist: (productId, inWishlist) => set((state) => {
     const exists = state.ids.includes(productId);

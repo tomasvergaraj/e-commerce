@@ -19,11 +19,13 @@ export default function HomePage() {
   const { data: banners } = useQuery({ queryKey: ['banners'], queryFn: () => bannersApi.getActive() });
   const { data: featured } = useQuery({ queryKey: ['featured'], queryFn: () => productsApi.getFeatured(8) });
   const { data: onSale } = useQuery({ queryKey: ['on-sale'], queryFn: () => productsApi.getOnSale(4) });
+  const { data: brands } = useQuery({ queryKey: ['brands'], queryFn: () => productsApi.getBrands() });
   const { data: categories } = useQuery({ queryKey: ['categories-tree'], queryFn: () => categoriesApi.getTree() });
 
   const bannerList = ((banners as any)?.data || banners || []) as Banner[];
   const featuredList = (featured as any)?.data || featured || [];
   const saleList = (onSale as any)?.data || onSale || [];
+  const brandsList = ((brands as any)?.data || brands || []) as string[];
   const catList = (categories as any)?.data || categories || [];
 
   const [activeBanner, setActiveBanner] = useState(0);
@@ -106,11 +108,12 @@ export default function HomePage() {
                   </p>
                 )}
                 <div className="flex flex-wrap items-center gap-3">
-                  {currentBanner.linkUrl && (
-                    <Link to={currentBanner.linkUrl} className="btn-primary inline-flex items-center gap-2 text-base py-3 px-8">
-                      Ver más <ArrowRight size={18} />
-                    </Link>
-                  )}
+                  <Link to={currentBanner.linkUrl || '/productos'} className="btn-primary inline-flex items-center gap-2 text-base py-3 px-8">
+                    Ver más <ArrowRight size={18} />
+                  </Link>
+                  <Link to="/productos" className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/20">
+                    Explorar catálogo
+                  </Link>
                   {hasMultipleBanners && (
                     <span className="text-sm text-white/70">
                       Carrusel automático cada 5 segundos
@@ -181,6 +184,24 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="bg-gray-950 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { value: `${catList.length || 0}+`, label: 'categorías activas' },
+              { value: `${brandsList.length || 0}+`, label: 'marcas disponibles' },
+              { value: `${featuredList.length || 0}+`, label: 'productos destacados' },
+              { value: `${saleList.length || 0}+`, label: 'ofertas visibles hoy' },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-sm">
+                <p className="text-2xl font-bold">{stat.value}</p>
+                <p className="text-sm text-white/70 mt-1">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Categories */}
       {catList.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
@@ -196,6 +217,32 @@ export default function HomePage() {
                 {cat._count?.products > 0 && <p className="text-xs text-gray-500 mt-1">{cat._count.products} productos</p>}
               </Link>
             ))}
+          </div>
+        </section>
+      )}
+
+      {brandsList.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-4 md:py-6">
+          <div className="rounded-[28px] border border-gray-200/80 bg-white px-6 py-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary-500">Selección curada</p>
+                <h2 className="text-2xl font-bold mt-2">Marcas presentes en la tienda</h2>
+              </div>
+              <p className="max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+                Una vitrina clara ayuda a comparar mejor y reduce la fricción al momento de decidir qué comprar.
+              </p>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              {brandsList.slice(0, 12).map((brand) => (
+                <span
+                  key={brand}
+                  className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200"
+                >
+                  {brand}
+                </span>
+              ))}
+            </div>
           </div>
         </section>
       )}
@@ -216,6 +263,34 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-4 md:py-6">
+        <div className="grid gap-4 md:grid-cols-3">
+          {[
+            {
+              icon: Shield,
+              title: 'Compra con tranquilidad',
+              description: 'Señales claras de stock, precios visibles y navegación pensada para decidir rápido.',
+            },
+            {
+              icon: Truck,
+              title: 'Despacho y seguimiento',
+              description: 'Información simple de envío y una experiencia post-compra coherente con la tienda.',
+            },
+            {
+              icon: Headphones,
+              title: 'Soporte que acompaña',
+              description: 'Canales de contacto visibles para resolver dudas antes y después de la compra.',
+            },
+          ].map((item) => (
+            <div key={item.title} className="rounded-[24px] border border-gray-200/80 bg-white px-6 py-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+              <item.icon size={24} className="text-primary-500" />
+              <h3 className="mt-4 text-lg font-semibold">{item.title}</h3>
+              <p className="mt-2 text-sm leading-7 text-gray-500 dark:text-gray-400">{item.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* On Sale */}
       {saleList.length > 0 && (
@@ -239,11 +314,18 @@ export default function HomePage() {
       {/* CTA */}
       <section className="bg-primary-600 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-3xl font-bold mb-4">¿Necesitas un proyecto a medida?</h2>
-          <p className="text-primary-100 mb-8 max-w-2xl mx-auto">En Nexo Spa desarrollamos soluciones tecnológicas personalizadas para tu negocio.</p>
-          <Link to="/categorias/servicios" className="bg-white text-primary-600 font-semibold py-3 px-8 rounded-lg hover:bg-primary-50 transition-colors inline-block">
-            Ver servicios
-          </Link>
+          <h2 className="text-3xl font-bold mb-4">Compra productos con respaldo y explora soluciones a medida</h2>
+          <p className="text-primary-100 mb-8 max-w-2xl mx-auto">
+            La tienda ya te permite comprar rápido, pero también puedes llevar tu proyecto un paso más allá si necesitas una solución personalizada.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Link to="/productos" className="bg-white text-primary-600 font-semibold py-3 px-8 rounded-lg hover:bg-primary-50 transition-colors inline-block">
+              Ver productos
+            </Link>
+            <Link to="/categorias/servicios" className="rounded-lg border border-white/30 px-8 py-3 font-semibold text-white transition-colors hover:bg-white/10 inline-block">
+              Ver servicios
+            </Link>
+          </div>
         </div>
       </section>
     </div>

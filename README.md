@@ -78,6 +78,7 @@ npm run start:dev
 El backend estará en: http://localhost:3000  
 Swagger docs en: http://localhost:3000/api/docs  
 También puedes iniciarlo desde la raíz con: `npm run start:dev`
+Ese comando ahora detecta si el puerto del backend ya está ocupado por otra instancia `node` del mismo entorno de desarrollo y la cierra antes de volver a levantar Nest.
 
 ### 4. Frontend
 
@@ -121,12 +122,16 @@ Acceder en: http://localhost:5173
 ## Novedades recientes
 
 - `npm run dev` desde la raíz levanta frontend y backend al mismo tiempo
+- `npm run start:dev` ahora libera automáticamente el puerto del backend si había otra instancia `node` ocupándolo
 - Home con carrusel de banners activos
 - Banners editables desde admin con subida, recorte y vista previa de imágenes
 - Páginas informativas administrables desde el panel con navegación pública dinámica
 - Footer público conectado a configuración, redes sociales y datos reales de la tienda
 - Reseñas habilitadas sólo para clientes con compras entregadas
 - Favoritos con corazón animado y estado visual sincronizado
+- Animación breve al agregar productos al carrito con feedback también en el ícono del header
+- Buscador público con sugerencias rápidas mientras el usuario escribe
+- Historial y detalle de pedidos rediseñados con mejor jerarquía visual y seguimiento
 - Transición suave entre light mode y dark mode
 
 ## Módulos implementados
@@ -139,7 +144,7 @@ Acceder en: http://localhost:5173
 - Paginación
 - Detalle de producto con variantes, imágenes, reseñas y favoritos
 - Productos relacionados
-- Buscador
+- Buscador con sugerencias rápidas
 - Carrito de compras (invitado y autenticado)
 - Checkout completo (dirección, envío, pago)
 - Páginas informativas dinámicas (políticas, FAQ, etc.) con diseño editorial
@@ -150,7 +155,7 @@ Acceder en: http://localhost:5173
 
 - Perfil y datos personales
 - Direcciones múltiples
-- Historial de pedidos con detalle
+- Historial de pedidos con vista enriquecida y detalle visual de seguimiento
 - Seguimiento de pedidos
 - Favoritos / wishlist con feedback visual
 - Reseñas de productos después de pedidos entregados

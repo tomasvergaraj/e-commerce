@@ -19,12 +19,18 @@ import {
   Mail,
   Phone,
   MapPin,
+  ShieldCheck,
+  Truck,
+  Headphones,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useCartStore } from '@/stores/cartStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { useWishlistStore } from '@/stores/wishlistStore';
-import { settingsApi } from '@/api/services';
+import { categoriesApi, settingsApi } from '@/api/services';
+import { cn } from '@/lib/utils';
+import { useTransientFlag } from '@/lib/useTransientFlag';
+import StoreSearchBox from '@/components/layout/StoreSearchBox';
 
 type PublicSettings = {
   store_name?: string;
@@ -44,6 +50,13 @@ type PublicPageLink = {
   slug: string;
 };
 
+type NavigationCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  parentId?: string | null;
+};
+
 function normalizeExternalUrl(value: string) {
   const trimmed = value.trim();
   if (!trimmed) return '';
@@ -56,12 +69,13 @@ function normalizeExternalUrl(value: string) {
 export default function StoreLayout() {
   const { isAuthenticated, isAdmin, user, logout } = useAuthStore();
   const itemCount = useCartStore((s) => s.itemCount);
+  const cartPulseTick = useCartStore((s) => s.cartPulseTick);
   const { dark, toggle: toggleTheme } = useThemeStore();
   const { isLoaded: isWishlistLoaded, sync: syncWishlist, clear: clearWishlist } = useWishlistStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const { active: isCartAnimating, trigger: triggerCartAnimation } = useTransientFlag(520);
   const navigate = useNavigate();
 
   const { data: publicSettingsData } = useQuery({
@@ -74,14 +88,26 @@ export default function StoreLayout() {
     queryFn: () => settingsApi.getPublicPages(),
     staleTime: 5 * 60 * 1000,
   });
+  const { data: categoriesData } = useQuery({
+    queryKey: ['categories-tree'],
+    queryFn: () => categoriesApi.getTree(),
+    staleTime: 5 * 60 * 1000,
+  });
 
   const settings = ((publicSettingsData as any)?.data || publicSettingsData || {}) as PublicSettings;
   const infoPages = ((publicPagesData as any)?.data || publicPagesData || []) as PublicPageLink[];
+  const categories = ((categoriesData as any)?.data || categoriesData || []) as NavigationCategory[];
   const storeName = settings.store_name?.trim() || 'Nexo';
   const storeDescription = settings.store_description?.trim() || 'Tu tienda de tecnología y desarrollo en Chile.';
   const storeEmail = settings.store_email?.trim() || 'contacto@nexo.cl';
   const storePhone = settings.store_phone?.trim() || '+56 9 1234 5678';
   const storeAddress = settings.store_address?.trim() || 'Santiago, Chile';
+  const featuredCategories = categories.filter((category) => !category.parentId).slice(0, 4);
+  const trustHighlights = [
+    { label: 'Compra protegida', Icon: ShieldCheck },
+    { label: 'Despacho rápido', Icon: Truck },
+    { label: 'Soporte cercano', Icon: Headphones },
+  ];
   const socialLinks = [
     settings.social_instagram
       ? { label: 'Instagram', href: normalizeExternalUrl(settings.social_instagram), Icon: Instagram }
@@ -108,14 +134,10 @@ export default function StoreLayout() {
     }
   }, [clearWishlist, isAuthenticated, isWishlistLoaded, syncWishlist, user?.id]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/productos?search=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchOpen(false);
-      setSearchQuery('');
-    }
-  };
+  useEffect(() => {
+    if (!cartPulseTick) return;
+    triggerCartAnimation();
+  }, [cartPulseTick, triggerCartAnimation]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -125,123 +147,197 @@ export default function StoreLayout() {
 
       <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2 shrink-0">
-              <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">N</div>
-              <span className="text-xl font-bold text-gray-900 dark:text-white">{storeName}</span>
-            </Link>
-
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-              <Link to="/productos" className="text-gray-600 dark:text-gray-300 hover:text-primary-500 transition-colors">Productos</Link>
-              <Link to="/categorias/tecnologia" className="text-gray-600 dark:text-gray-300 hover:text-primary-500 transition-colors">Tecnología</Link>
-              <Link to="/categorias/accesorios" className="text-gray-600 dark:text-gray-300 hover:text-primary-500 transition-colors">Accesorios</Link>
-              <Link to="/categorias/servicios" className="text-gray-600 dark:text-gray-300 hover:text-primary-500 transition-colors">Servicios</Link>
-            </nav>
-
-            <div className="flex items-center gap-2">
-              <button onClick={() => setSearchOpen(!searchOpen)} className="p-2 text-gray-600 dark:text-gray-300 hover:text-primary-500">
-                <Search size={20} />
-              </button>
-
-              <button
-                onClick={toggleTheme}
-                aria-label={dark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-                className="p-2 text-gray-600 dark:text-gray-300 hover:text-primary-500 transition-transform duration-200 active:scale-90"
-              >
-                <span className="relative block h-5 w-5">
-                  <Sun
-                    size={20}
-                    className={`absolute inset-0 transition-all duration-300 ${dark ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'}`}
-                  />
-                  <Moon
-                    size={20}
-                    className={`absolute inset-0 transition-all duration-300 ${dark ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'}`}
-                  />
-                </span>
-              </button>
-
-              {isAuthenticated && (
-                <Link to="/cuenta/favoritos" className="p-2 text-gray-600 dark:text-gray-300 hover:text-primary-500">
-                  <Heart size={20} />
-                </Link>
-              )}
-
-              <Link to="/carrito" className="p-2 text-gray-600 dark:text-gray-300 hover:text-primary-500 relative">
-                <ShoppingCart size={20} />
-                {itemCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-primary-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
-                    {itemCount}
-                  </span>
-                )}
+          <div className="py-4">
+            <div className="flex items-center justify-between gap-3">
+              <Link to="/" className="flex items-center gap-2 shrink-0">
+                <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">N</div>
+                <div>
+                  <span className="block text-xl font-bold text-gray-900 dark:text-white">{storeName}</span>
+                  <span className="hidden xl:block text-xs text-gray-500 dark:text-gray-400">Tienda en línea con despacho a todo Chile</span>
+                </div>
               </Link>
 
-              {isAuthenticated ? (
-                <div className="relative">
-                  <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex items-center gap-1 p-2 text-gray-600 dark:text-gray-300 hover:text-primary-500">
-                    <User size={20} />
-                    <ChevronDown size={14} />
-                  </button>
-                  {userMenuOpen && (
-                    <>
-                      <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                      <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 py-2">
-                        <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-                          <p className="font-medium text-sm">{user?.firstName} {user?.lastName}</p>
-                          <p className="text-xs text-gray-500">{user?.email}</p>
-                        </div>
-                        <Link to="/cuenta/pedidos" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700">Mis Pedidos</Link>
-                        <Link to="/cuenta/perfil" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700">Mi Perfil</Link>
-                        <Link to="/cuenta/favoritos" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700">Favoritos</Link>
-                        {isAdmin && (
-                          <Link to="/admin" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2 text-sm text-primary-500 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium">Panel Admin</Link>
-                        )}
-                        <button
-                          onClick={() => {
-                            logout();
-                            setUserMenuOpen(false);
-                            navigate('/');
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
-                        >
-                          <LogOut size={14} /> Cerrar sesión
-                        </button>
-                      </div>
-                    </>
+              <StoreSearchBox
+                storeName={storeName}
+                className="hidden lg:flex flex-1 max-w-xl"
+                showSubmitButton
+              />
+
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <button onClick={() => setSearchOpen(!searchOpen)} className="p-2 text-gray-600 dark:text-gray-300 hover:text-primary-500 lg:hidden">
+                  <Search size={20} />
+                </button>
+
+                <button
+                  onClick={toggleTheme}
+                  aria-label={dark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                  className="p-2 text-gray-600 dark:text-gray-300 hover:text-primary-500 transition-transform duration-200 active:scale-90"
+                >
+                  <span className="relative block h-5 w-5">
+                    <Sun
+                      size={20}
+                      className={`absolute inset-0 transition-all duration-300 ${dark ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'}`}
+                    />
+                    <Moon
+                      size={20}
+                      className={`absolute inset-0 transition-all duration-300 ${dark ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'}`}
+                    />
+                  </span>
+                </button>
+
+                {isAuthenticated && (
+                  <Link to="/cuenta/favoritos" className="p-2 text-gray-600 dark:text-gray-300 hover:text-primary-500">
+                    <Heart size={20} />
+                  </Link>
+                )}
+
+                <Link
+                  to="/carrito"
+                  className={cn(
+                    'relative p-2 text-gray-600 transition-colors dark:text-gray-300 hover:text-primary-500',
+                    isCartAnimating && 'text-primary-500',
                   )}
-                </div>
-              ) : (
-                <Link to="/login" className="btn-primary text-sm py-2 px-4">Ingresar</Link>
-              )}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      'pointer-events-none absolute inset-0 rounded-full border border-primary-300/70 opacity-0 dark:border-primary-500/40',
+                      isCartAnimating && 'cart-ring-pop',
+                    )}
+                  />
+                  <ShoppingCart size={20} className={cn('relative z-10', isCartAnimating && 'cart-icon-pop')} />
+                  {itemCount > 0 && (
+                    <span
+                      className={cn(
+                        'absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary-500 text-xs font-medium text-white',
+                        isCartAnimating && 'cart-badge-bounce',
+                      )}
+                    >
+                      {itemCount}
+                    </span>
+                  )}
+                </Link>
 
-              <button className="md:hidden p-2 text-gray-600 dark:text-gray-300" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-                {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
+                {isAuthenticated ? (
+                  <div className="relative">
+                    <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex items-center gap-1 p-2 text-gray-600 dark:text-gray-300 hover:text-primary-500">
+                      <User size={20} />
+                      <ChevronDown size={14} />
+                    </button>
+                    {userMenuOpen && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
+                        <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 py-2">
+                          <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                            <p className="font-medium text-sm">{user?.firstName} {user?.lastName}</p>
+                            <p className="text-xs text-gray-500">{user?.email}</p>
+                          </div>
+                          <Link to="/cuenta/pedidos" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700">Mis Pedidos</Link>
+                          <Link to="/cuenta/perfil" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700">Mi Perfil</Link>
+                          <Link to="/cuenta/favoritos" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700">Favoritos</Link>
+                          {isAdmin && (
+                            <Link to="/admin" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2 text-sm text-primary-500 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium">Panel Admin</Link>
+                          )}
+                          <button
+                            onClick={() => {
+                              logout();
+                              setUserMenuOpen(false);
+                              navigate('/');
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                          >
+                            <LogOut size={14} /> Cerrar sesión
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <Link to="/login" className="btn-primary hidden sm:inline-flex text-sm py-2 px-4">Ingresar</Link>
+                )}
+
+                <button className="md:hidden p-2 text-gray-600 dark:text-gray-300" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                  {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                </button>
+              </div>
             </div>
-          </div>
 
-          {searchOpen && (
-            <form onSubmit={handleSearch} className="py-3 border-t border-gray-100 dark:border-gray-800">
-              <div className="relative">
-                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar productos..."
+            <div className="hidden md:flex items-center justify-between gap-4 border-t border-gray-100 dark:border-gray-800 mt-4 pt-3">
+              <nav className="flex flex-wrap items-center gap-5 text-sm font-medium">
+                <Link to="/productos" className="text-gray-700 dark:text-gray-200 hover:text-primary-500 transition-colors">Explorar todo</Link>
+                {featuredCategories.map((category) => (
+                  <Link
+                    key={category.id}
+                    to={`/categorias/${category.slug}`}
+                    className="text-gray-600 dark:text-gray-300 hover:text-primary-500 transition-colors"
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+              </nav>
+
+              <div className="hidden xl:flex items-center gap-2">
+                {trustHighlights.map(({ label, Icon }) => (
+                  <span key={label} className="inline-flex items-center gap-2 rounded-full bg-gray-50 px-3 py-1.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                    <Icon size={14} className="text-primary-500" />
+                    {label}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {searchOpen && (
+              <div className="mt-3 border-t border-gray-100 py-3 dark:border-gray-800 lg:hidden">
+                <StoreSearchBox
+                  storeName={storeName}
                   autoFocus
-                  className="input-field pl-10"
+                  onAfterNavigate={() => setSearchOpen(false)}
                 />
               </div>
-            </form>
-          )}
+            )}
+          </div>
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-4 space-y-3">
-            <Link to="/productos" onClick={() => setMobileMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 font-medium py-2">Productos</Link>
-            <Link to="/categorias/tecnologia" onClick={() => setMobileMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 py-2">Tecnología</Link>
-            <Link to="/categorias/accesorios" onClick={() => setMobileMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 py-2">Accesorios</Link>
-            <Link to="/categorias/servicios" onClick={() => setMobileMenuOpen(false)} className="block text-gray-700 dark:text-gray-300 py-2">Servicios</Link>
+          <div className="md:hidden border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+              <StoreSearchBox
+                storeName={storeName}
+                className="mb-4"
+                placeholder="Buscar productos..."
+                onAfterNavigate={() => setMobileMenuOpen(false)}
+              />
+
+              <div className="space-y-2">
+                <Link to="/productos" onClick={() => setMobileMenuOpen(false)} className="block rounded-xl bg-gray-50 px-4 py-3 font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                  Ver todo el catálogo
+                </Link>
+                {featuredCategories.map((category) => (
+                  <Link
+                    key={category.id}
+                    to={`/categorias/${category.slug}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block rounded-xl px-4 py-3 text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+                {!isAuthenticated && (
+                  <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="btn-primary mt-2 inline-flex w-full justify-center text-sm">
+                    Ingresar
+                  </Link>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mt-4">
+                {trustHighlights.slice(0, 2).map(({ label, Icon }) => (
+                  <div key={label} className="rounded-xl border border-gray-200 px-3 py-3 text-xs text-gray-600 dark:border-gray-700 dark:text-gray-300">
+                    <Icon size={14} className="text-primary-500 mb-2" />
+                    {label}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </header>
@@ -281,9 +377,13 @@ export default function StoreLayout() {
               <h4 className="font-semibold text-white mb-3">Tienda</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link to="/productos" className="hover:text-primary-400">Todos los productos</Link></li>
-                <li><Link to="/categorias/tecnologia" className="hover:text-primary-400">Tecnología</Link></li>
-                <li><Link to="/categorias/accesorios" className="hover:text-primary-400">Accesorios</Link></li>
-                <li><Link to="/categorias/servicios" className="hover:text-primary-400">Servicios</Link></li>
+                {featuredCategories.map((category) => (
+                  <li key={category.id}>
+                    <Link to={`/categorias/${category.slug}`} className="hover:text-primary-400">
+                      {category.name}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
             <div>

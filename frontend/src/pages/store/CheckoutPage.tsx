@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { CreditCard, Truck, ChevronLeft, Loader2 } from 'lucide-react';
+import { CreditCard, Truck, ChevronLeft, Loader2, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
 import { ordersApi, shippingApi, paymentsApi, usersApi } from '@/api/services';
@@ -15,6 +15,7 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [selectedShipping, setSelectedShipping] = useState<any>(null);
+  const [checkoutError, setCheckoutError] = useState('');
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
@@ -58,9 +59,22 @@ export default function CheckoutPage() {
   }
 
   const onSubmit = async (formData: any) => {
-    if (!selectedShipping) { toast.error('Selecciona un método de envío'); return; }
+    if (isAuthenticated && addrList.length > 0 && !selectedAddress) {
+      const message = 'Selecciona una dirección guardada para continuar';
+      setCheckoutError(message);
+      toast.error(message);
+      return;
+    }
+
+    if (!selectedShipping) {
+      const message = 'Selecciona un método de envío';
+      setCheckoutError(message);
+      toast.error(message);
+      return;
+    }
 
     setSubmitting(true);
+    setCheckoutError('');
     try {
       const orderData: any = {
         items: items.map((i) => ({
@@ -111,6 +125,40 @@ export default function CheckoutPage() {
       </Link>
       <h1 className="text-2xl font-bold mb-8">Checkout</h1>
 
+      <div className="grid gap-3 sm:grid-cols-3 mb-8">
+        {[
+          { title: '1. Carrito', description: 'Revisa tus productos', active: true },
+          { title: '2. Datos y envío', description: 'Completa tu información', active: true },
+          { title: '3. Confirmación', description: 'Pago y cierre de compra', active: false },
+        ].map((step) => (
+          <div
+            key={step.title}
+            className={`rounded-2xl border px-4 py-4 ${
+              step.active
+                ? 'border-primary-200 bg-primary-50 dark:border-primary-900/60 dark:bg-primary-950/40'
+                : 'border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900'
+            }`}
+          >
+            <p className="text-sm font-semibold">{step.title}</p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{step.description}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3 mb-8">
+        {[
+          { title: 'Compra protegida', description: 'Tus datos y tu pedido se procesan con confirmación inmediata.', Icon: ShieldCheck },
+          { title: 'Despacho claro', description: 'Elige el método de envío y revisa el costo antes de pagar.', Icon: Truck },
+          { title: 'Cierre simple', description: 'Resumen visible, totales claros y pasos fáciles de seguir.', Icon: CheckCircle2 },
+        ].map(({ title, description, Icon }) => (
+          <div key={title} className="rounded-2xl border border-gray-200/80 bg-white px-5 py-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <Icon size={20} className="text-primary-500" />
+            <p className="mt-3 font-semibold">{title}</p>
+            <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">{description}</p>
+          </div>
+        ))}
+      </div>
+
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
           <div className="space-y-8">
@@ -125,6 +173,7 @@ export default function CheckoutPage() {
                   <div>
                     <label className="text-sm font-medium mb-1 block">Email *</label>
                     <input {...register('guestEmail', { required: true })} type="email" className="input-field" placeholder="tu@email.com" />
+                    {errors.guestEmail && <p className="mt-1 text-xs text-red-500">Ingresa un email válido para continuar.</p>}
                   </div>
                   <div>
                     <label className="text-sm font-medium mb-1 block">Teléfono</label>
@@ -133,10 +182,12 @@ export default function CheckoutPage() {
                   <div>
                     <label className="text-sm font-medium mb-1 block">Nombre *</label>
                     <input {...register('guestFirstName', { required: true })} className="input-field" />
+                    {errors.guestFirstName && <p className="mt-1 text-xs text-red-500">Completa tu nombre.</p>}
                   </div>
                   <div>
                     <label className="text-sm font-medium mb-1 block">Apellido *</label>
                     <input {...register('guestLastName', { required: true })} className="input-field" />
+                    {errors.guestLastName && <p className="mt-1 text-xs text-red-500">Completa tu apellido.</p>}
                   </div>
                 </div>
               </div>
@@ -152,7 +203,10 @@ export default function CheckoutPage() {
                       selectedAddress === addr.id ? 'border-primary-500 bg-primary-50 dark:bg-primary-950' : 'border-gray-200 dark:border-gray-700'
                     }`}>
                       <input type="radio" name="address" value={addr.id} checked={selectedAddress === addr.id}
-                        onChange={() => setSelectedAddress(addr.id)} className="mt-1" />
+                        onChange={() => {
+                          setSelectedAddress(addr.id);
+                          setCheckoutError('');
+                        }} className="mt-1" />
                       <div>
                         <p className="font-medium text-sm">{addr.label || 'Dirección'}</p>
                         <p className="text-sm text-gray-500">{addr.street} {addr.number} {addr.apartment}, {addr.commune}, {addr.city}</p>
@@ -165,6 +219,7 @@ export default function CheckoutPage() {
                   <div className="md:col-span-2">
                     <label className="text-sm font-medium mb-1 block">Calle *</label>
                     <input {...register('shippingStreet', { required: true })} className="input-field" />
+                    {errors.shippingStreet && <p className="mt-1 text-xs text-red-500">Ingresa la calle de despacho.</p>}
                   </div>
                   <div>
                     <label className="text-sm font-medium mb-1 block">Número</label>
@@ -177,10 +232,12 @@ export default function CheckoutPage() {
                   <div>
                     <label className="text-sm font-medium mb-1 block">Comuna *</label>
                     <input {...register('shippingCommune', { required: true })} className="input-field" />
+                    {errors.shippingCommune && <p className="mt-1 text-xs text-red-500">Ingresa la comuna.</p>}
                   </div>
                   <div>
                     <label className="text-sm font-medium mb-1 block">Ciudad *</label>
                     <input {...register('shippingCity', { required: true })} className="input-field" />
+                    {errors.shippingCity && <p className="mt-1 text-xs text-red-500">Ingresa la ciudad.</p>}
                   </div>
                   <div>
                     <label className="text-sm font-medium mb-1 block">Región</label>
@@ -200,7 +257,10 @@ export default function CheckoutPage() {
                   }`}>
                     <div className="flex items-center gap-3">
                       <input type="radio" name="shipping" checked={selectedShipping?.id === method.id}
-                        onChange={() => setSelectedShipping(method)} />
+                        onChange={() => {
+                          setSelectedShipping(method);
+                          setCheckoutError('');
+                        }} />
                       <div>
                         <p className="font-medium text-sm">{method.name}</p>
                         <p className="text-xs text-gray-500">{method.description} · {method.minDays}-{method.maxDays} días</p>
@@ -215,19 +275,36 @@ export default function CheckoutPage() {
             {/* Payment */}
             <div className="card p-6">
               <h2 className="font-bold text-lg mb-4 flex items-center gap-2"><CreditCard size={20} /> Método de pago</h2>
-              <label className="flex items-center gap-3 p-4 rounded-lg border border-primary-500 bg-primary-50 dark:bg-primary-950 cursor-pointer">
-                <input type="radio" checked readOnly />
-                <div>
-                  <p className="font-medium text-sm">Pago en línea</p>
-                  <p className="text-xs text-gray-500">Tarjeta de crédito/débito (simulado)</p>
+              <div className="rounded-2xl border border-primary-200 bg-primary-50 p-4 dark:border-primary-900/60 dark:bg-primary-950/40">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input type="radio" checked readOnly />
+                  <div>
+                    <p className="font-medium text-sm">Pago en línea</p>
+                    <p className="text-xs text-gray-500">Tarjeta de crédito/débito</p>
+                  </div>
+                </label>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {['Visa', 'Mastercard', 'Débito', 'Transferencia'].map((method) => (
+                    <span key={method} className="inline-flex rounded-full border border-primary-200 bg-white px-3 py-1 text-xs font-medium text-gray-700 dark:border-primary-900/60 dark:bg-gray-900 dark:text-gray-200">
+                      {method}
+                    </span>
+                  ))}
                 </div>
-              </label>
+                <p className="mt-4 text-xs text-gray-500">
+                  Tu pedido se confirma al instante y verás el total final antes de terminar la compra.
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Order summary */}
           <div className="card p-6 h-fit sticky top-24">
             <h2 className="font-bold text-lg mb-4">Resumen del pedido</h2>
+            {checkoutError && (
+              <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+                {checkoutError}
+              </div>
+            )}
             <div className="space-y-3 mb-4">
               {items.map((item) => (
                 <div key={item.id} className="flex gap-3">
@@ -249,6 +326,12 @@ export default function CheckoutPage() {
               <div className="flex justify-between"><span className="text-gray-500">Envío</span><span>{selectedShipping ? formatPrice(shippingCost) : '-'}</span></div>
               <hr className="border-gray-200 dark:border-gray-700" />
               <div className="flex justify-between text-lg font-bold"><span>Total</span><span>{formatPrice(total)}</span></div>
+            </div>
+            <div className="mt-5 rounded-2xl bg-gray-50 px-4 py-4 text-sm text-gray-600 dark:bg-gray-950 dark:text-gray-300">
+              <div className="flex items-start gap-2">
+                <ShieldCheck size={16} className="mt-0.5 shrink-0 text-primary-500" />
+                <p>Compra protegida, resumen claro y soporte visible durante el proceso.</p>
+              </div>
             </div>
             <button type="submit" disabled={submitting} className="btn-primary w-full mt-6 py-3 flex items-center justify-center gap-2">
               {submitting ? <><Loader2 size={18} className="animate-spin" /> Procesando...</> : 'Confirmar pedido'}

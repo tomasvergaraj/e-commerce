@@ -3,12 +3,13 @@ import { useParams, Link, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
-  ChevronRight, ShoppingCart, Minus, Plus, Star, Truck, Loader2, MessageSquare,
+  ChevronRight, ShoppingCart, Minus, Plus, Star, Truck, Loader2, MessageSquare, ShieldCheck, RotateCcw, CreditCard,
 } from 'lucide-react';
 import { productsApi, reviewsApi } from '@/api/services';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
-import { formatPrice } from '@/lib/utils';
+import { cn, formatPrice } from '@/lib/utils';
+import { useTransientFlag } from '@/lib/useTransientFlag';
 import ProductCard from '@/components/store/ProductCard';
 import WishlistButton from '@/components/store/WishlistButton';
 import { PageLoader } from '@/components/common/Loading';
@@ -45,6 +46,7 @@ export default function ProductDetailPage() {
   const [reviewRating, setReviewRating] = useState(5);
   const addItem = useCartStore((s) => s.addItem);
   const { isAuthenticated } = useAuthStore();
+  const { active: isCartFeedbackActive, trigger: triggerCartFeedback } = useTransientFlag();
   const { register, handleSubmit, reset } = useForm<ReviewFormValues>({
     defaultValues: { title: '', comment: '' },
   });
@@ -115,6 +117,20 @@ export default function ProductDetailPage() {
   const displayPrice = activeVariant?.price || product.price;
   const displayStock = activeVariant ? activeVariant.stock : product.stock;
   const hasDiscount = product.comparePrice && product.comparePrice > displayPrice;
+  const deliveryMessage = displayStock > 0 ? 'Recíbelo entre 1 y 5 días hábiles' : 'Te avisaremos cuando vuelva a estar disponible';
+  const purchaseHighlights = [
+    { title: 'Pago protegido', description: 'Proceso de compra claro y respaldado.', Icon: ShieldCheck },
+    { title: 'Despacho visible', description: deliveryMessage, Icon: Truck },
+    { title: 'Cambios simples', description: 'Compra con menos fricción y más tranquilidad.', Icon: RotateCcw },
+  ];
+  const productFacts = [
+    product.brand ? { label: 'Marca', value: product.brand } : null,
+    primaryCat ? { label: 'Categoría', value: primaryCat.name } : null,
+    { label: 'SKU', value: activeVariant?.sku || product.sku || 'No informado' },
+    { label: 'Stock', value: displayStock > 0 ? `${displayStock} unidades disponibles` : 'Agotado' },
+    variants.length > 0 ? { label: 'Variantes', value: `${variants.length} opciones activas` } : null,
+    product.reviewCount > 0 ? { label: 'Reseñas', value: `${product.reviewCount} opiniones publicadas` } : null,
+  ].filter(Boolean) as Array<{ label: string; value: string }>;
 
   const handleAddToCart = async () => {
     if (variants.length > 0 && !selectedVariant) {
@@ -123,6 +139,7 @@ export default function ProductDetailPage() {
     }
     try {
       await addItem(product.id, selectedVariant || undefined, quantity);
+      triggerCartFeedback();
       toast.success('Agregado al carrito');
     } catch {
       toast.error('Error al agregar');
@@ -191,6 +208,9 @@ export default function ProductDetailPage() {
                 ))}
               </div>
               <span className="text-sm text-gray-500">({product.reviewCount} reseñas)</span>
+              <a href="#reviews" className="text-sm font-medium text-primary-500 hover:underline">
+                Ver opiniones
+              </a>
             </div>
           )}
 
@@ -206,6 +226,16 @@ export default function ProductDetailPage() {
           </div>
 
           {product.shortDesc && <p className="text-gray-600 dark:text-gray-400 mb-6">{product.shortDesc}</p>}
+
+          <div className="grid gap-3 sm:grid-cols-3 mb-6">
+            {purchaseHighlights.map(({ title, description, Icon }) => (
+              <div key={title} className="rounded-2xl border border-gray-200/80 bg-gray-50/80 px-4 py-4 dark:border-gray-800 dark:bg-gray-900/70">
+                <Icon size={18} className="text-primary-500" />
+                <p className="mt-3 text-sm font-semibold text-gray-900 dark:text-white">{title}</p>
+                <p className="mt-1 text-xs leading-6 text-gray-500 dark:text-gray-400">{description}</p>
+              </div>
+            ))}
+          </div>
 
           {/* Variants */}
           {variants.length > 0 && (
@@ -254,9 +284,19 @@ export default function ProductDetailPage() {
             <button
               onClick={handleAddToCart}
               disabled={displayStock <= 0}
-              className="btn-primary flex-1 flex items-center justify-center gap-2 py-3"
+              className={cn(
+                'btn-primary relative flex flex-1 items-center justify-center gap-2 overflow-hidden py-3',
+                isCartFeedbackActive && 'cart-button-pop bg-primary-600 shadow-lg shadow-primary-500/25 hover:bg-primary-600',
+              )}
             >
-              <ShoppingCart size={20} />
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'pointer-events-none absolute inset-0 rounded-lg border border-primary-300/70 opacity-0',
+                  isCartFeedbackActive && 'cart-ring-pop',
+                )}
+              />
+              <ShoppingCart size={20} className={cn('relative z-10', isCartFeedbackActive && 'cart-icon-pop')} />
               {displayStock > 0 ? 'Agregar al carrito' : 'Agotado'}
             </button>
             <WishlistButton
@@ -267,26 +307,78 @@ export default function ProductDetailPage() {
               iconSize={20}
             />
           </div>
+          <p className="text-xs text-gray-500 -mt-4 mb-6">
+            Confirmación inmediata del pedido · Soporte visible durante y después de la compra
+          </p>
 
           {/* Shipping info */}
           <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm">
               <Truck size={20} className="text-primary-500 shrink-0" />
             <div>
               <p className="font-medium">Envío a todo Chile</p>
-              <p className="text-gray-500 text-xs">Despacho en 1-5 días hábiles</p>
+              <p className="text-gray-500 text-xs">{deliveryMessage}</p>
             </div>
           </div>
 
           {/* SKU */}
           <p className="text-xs text-gray-400 mt-4">SKU: {activeVariant?.sku || product.sku}</p>
+
+          <div className="mt-4 rounded-2xl border border-gray-200/80 bg-white px-5 py-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
+              <CreditCard size={18} className="text-primary-500" />
+              Medios de pago y compra segura
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {['Visa', 'Mastercard', 'Débito', 'Transferencia'].map((method) => (
+                <span
+                  key={method}
+                  className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200"
+                >
+                  {method}
+                </span>
+              ))}
+            </div>
+            <div className="mt-4 space-y-3 text-sm text-gray-600 dark:text-gray-300">
+              <div className="flex items-start gap-3">
+                <ShieldCheck size={16} className="mt-0.5 shrink-0 text-primary-500" />
+                <p>Proceso de compra protegido con confirmación inmediata del pedido.</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <RotateCcw size={16} className="mt-0.5 shrink-0 text-primary-500" />
+                <p>Políticas visibles para que compres con más confianza y menos dudas.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Description */}
       {product.longDesc && (
-        <div className="mt-12 max-w-3xl">
-          <h2 className="text-xl font-bold mb-4">Descripción</h2>
-          <div className="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">{product.longDesc}</div>
+        <div className="mt-12 max-w-5xl grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div>
+            <h2 className="text-xl font-bold mb-4">Descripción</h2>
+            <div className="rounded-[24px] border border-gray-200/80 bg-white px-6 py-6 text-gray-600 leading-relaxed whitespace-pre-line shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
+              {product.longDesc}
+            </div>
+          </div>
+
+          <aside className="self-start rounded-[24px] border border-gray-200/80 bg-white px-5 py-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">
+              Lo que debes saber
+            </h3>
+            <div className="mt-4 space-y-4">
+              {productFacts.map((fact) => (
+                <div key={fact.label} className="rounded-2xl bg-gray-50 px-4 py-3 dark:bg-gray-950">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
+                    {fact.label}
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                    {fact.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </aside>
         </div>
       )}
 

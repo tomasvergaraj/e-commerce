@@ -18,6 +18,7 @@ interface CartState {
   itemCount: number;
   loading: boolean;
   cartId: string | null;
+  cartPulseTick: number;
   fetchCart: () => Promise<void>;
   addItem: (productId: string, variantId?: string, quantity?: number) => Promise<void>;
   updateItem: (itemId: string, quantity: number) => Promise<void>;
@@ -31,6 +32,7 @@ export const useCartStore = create<CartState>((set) => ({
   itemCount: 0,
   loading: false,
   cartId: null,
+  cartPulseTick: 0,
 
   fetchCart: async () => {
     try {
@@ -54,12 +56,13 @@ export const useCartStore = create<CartState>((set) => ({
       set({ loading: true });
       const res = await cartApi.addItem({ productId, variantId, quantity });
       const data = res.data || res;
-      set({
+      set((state) => ({
         items: data.items || [],
         subtotal: data.subtotal || 0,
         itemCount: data.itemCount || 0,
         loading: false,
-      });
+        cartPulseTick: state.cartPulseTick + 1,
+      }));
     } catch {
       set({ loading: false });
       throw new Error('Error al agregar');
