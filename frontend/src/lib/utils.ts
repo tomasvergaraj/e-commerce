@@ -1,7 +1,44 @@
 import { clsx, type ClassValue } from 'clsx';
 
+const DEFAULT_API_URL = '/api';
+const ABSOLUTE_URL_PATTERN = /^(data:|blob:|https?:\/\/|\/\/)/i;
+const UPLOADS_PATH_PATTERN = /^\/?uploads\//i;
+
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);
+}
+
+function getRuntimeOrigin() {
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+
+  return 'http://localhost:5173';
+}
+
+export function getApiOrigin() {
+  const apiUrl = (import.meta.env.VITE_API_URL || DEFAULT_API_URL).trim();
+
+  if (ABSOLUTE_URL_PATTERN.test(apiUrl)) {
+    return new URL(apiUrl, getRuntimeOrigin()).origin;
+  }
+
+  return getRuntimeOrigin();
+}
+
+export function resolveAssetUrl(value?: string | null) {
+  const trimmed = value?.trim();
+
+  if (!trimmed || ABSOLUTE_URL_PATTERN.test(trimmed)) {
+    return trimmed || '';
+  }
+
+  if (!UPLOADS_PATH_PATTERN.test(trimmed)) {
+    return trimmed;
+  }
+
+  const normalizedPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  return new URL(normalizedPath, `${getApiOrigin()}/`).toString();
 }
 
 export function formatPrice(price: number): string {

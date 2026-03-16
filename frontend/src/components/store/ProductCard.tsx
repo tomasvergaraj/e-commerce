@@ -3,7 +3,7 @@ import { ShoppingCart } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import { useCartStore } from '@/stores/cartStore';
 import WishlistButton from '@/components/store/WishlistButton';
-import { cn } from '@/lib/utils';
+import { cn, resolveAssetUrl } from '@/lib/utils';
 import { useTransientFlag } from '@/lib/useTransientFlag';
 import toast from 'react-hot-toast';
 
@@ -15,7 +15,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem);
   const navigate = useNavigate();
   const { active: isCartFeedbackActive, trigger: triggerCartFeedback } = useTransientFlag();
-  const image = product.images?.[0]?.url || 'https://placehold.co/400x400/e2e8f0/94a3b8?text=Sin+imagen';
+  const image = resolveAssetUrl(product.images?.[0]?.url) || 'https://placehold.co/400x400/e2e8f0/94a3b8?text=Sin+imagen';
   const hasDiscount = product.comparePrice && product.comparePrice > product.price;
   const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
   const isOutOfStock = product.stock <= 0;

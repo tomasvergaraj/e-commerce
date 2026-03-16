@@ -18,6 +18,7 @@ import {
   getOrderStatusColor,
   getOrderStatusLabel,
   getPaymentStatusLabel,
+  resolveAssetUrl,
 } from '@/lib/utils';
 import { PageLoader } from '@/components/common/Loading';
 
@@ -199,7 +200,7 @@ export default function OrderDetailPage() {
               {items.map((item: any) => (
                 <div key={item.id} className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center">
                   <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-800">
-                    <img src={item.product?.images?.[0]?.url || 'https://placehold.co/100x100'} alt="" className="h-full w-full object-cover" />
+                    <img src={resolveAssetUrl(item.product?.images?.[0]?.url) || 'https://placehold.co/100x100'} alt="" className="h-full w-full object-cover" />
                   </div>
 
                   <div className="min-w-0 flex-1">

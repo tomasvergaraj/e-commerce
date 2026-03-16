@@ -8,7 +8,7 @@ import {
 import { productsApi, reviewsApi } from '@/api/services';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
-import { cn, formatPrice } from '@/lib/utils';
+import { cn, formatPrice, resolveAssetUrl } from '@/lib/utils';
 import { useTransientFlag } from '@/lib/useTransientFlag';
 import ProductCard from '@/components/store/ProductCard';
 import WishlistButton from '@/components/store/WishlistButton';
@@ -172,7 +172,7 @@ export default function ProductDetailPage() {
         <div>
           <div className="aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 mb-4">
             <img
-              src={images[selectedImage]?.url || 'https://placehold.co/800x800/e2e8f0/94a3b8?text=Sin+imagen'}
+              src={resolveAssetUrl(images[selectedImage]?.url) || 'https://placehold.co/800x800/e2e8f0/94a3b8?text=Sin+imagen'}
               alt={product.name}
               className="w-full h-full object-cover"
             />
@@ -187,7 +187,7 @@ export default function ProductDetailPage() {
                     i === selectedImage ? 'border-primary-500' : 'border-transparent'
                   }`}
                 >
-                  <img src={img.url} alt="" className="w-full h-full object-cover" />
+                  <img src={resolveAssetUrl(img.url)} alt="" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Trash2, Minus, Plus, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, resolveAssetUrl } from '@/lib/utils';
 import EmptyState from '@/components/common/EmptyState';
 
 export default function CartPage() {
@@ -28,7 +28,7 @@ export default function CartPage() {
         {/* Items */}
         <div className="space-y-4">
           {items.map((item) => {
-            const image = item.product?.images?.[0]?.url || 'https://placehold.co/200x200/e2e8f0/94a3b8?text=Producto';
+            const image = resolveAssetUrl(item.product?.images?.[0]?.url) || 'https://placehold.co/200x200/e2e8f0/94a3b8?text=Producto';
             return (
               <div key={item.id} className="card p-4 flex gap-4">
                 <Link to={`/productos/${item.product?.slug}`} className="w-24 h-24 rounded-lg overflow-hidden bg-gray-100 shrink-0">

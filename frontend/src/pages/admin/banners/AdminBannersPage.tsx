@@ -5,6 +5,7 @@ import { Edit, ExternalLink, Image, Plus, Trash2 } from 'lucide-react';
 import { bannersApi } from '@/api/services';
 import { PageLoader } from '@/components/common/Loading';
 import BannerImageUploadField from '@/components/common/BannerImageUploadField';
+import { resolveAssetUrl } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 type Banner = {
@@ -217,7 +218,7 @@ export default function AdminBannersPage() {
           {banners.map((banner) => (
             <div key={banner.id} className="card overflow-hidden">
               <div className="aspect-[16/5] bg-gray-100 dark:bg-gray-800">
-                <img src={banner.imageUrl} alt={banner.title} className="w-full h-full object-cover" />
+                <img src={resolveAssetUrl(banner.imageUrl)} alt={banner.title} className="w-full h-full object-cover" />
               </div>
               <div className="p-4">
                 <div className="flex items-start gap-3">

@@ -4,8 +4,13 @@ import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { mkdirSync } from 'fs';
-import { resolve } from 'path';
 import { AppModule } from './app.module';
+import {
+  getAllowedOrigins,
+  getPublicAppUrl,
+  getUploadsDir,
+  isOriginAllowed,
+} from './common/config/runtime.config';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
@@ -13,20 +18,29 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const config = app.get(ConfigService);
 
-  // Global prefix
   app.setGlobalPrefix('api');
 
-  // CORS
+  const allowedOrigins = getAllowedOrigins(
+    config.get<string>('FRONTEND_URL'),
+    config.get<string>('CORS_ORIGINS'),
+  );
+
   app.enableCors({
-    origin: config.get<string>('FRONTEND_URL', 'http://localhost:5173'),
+    origin: (origin, callback) => {
+      if (!origin || isOriginAllowed(origin, allowedOrigins)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(null, false);
+    },
     credentials: true,
   });
 
-  const uploadsPath = resolve(process.cwd(), 'uploads');
+  const uploadsPath = getUploadsDir(config.get<string>('UPLOAD_DIR'));
   mkdirSync(uploadsPath, { recursive: true });
   app.useStaticAssets(uploadsPath, { prefix: '/uploads/' });
 
-  // Global pipes
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -36,11 +50,9 @@ async function bootstrap() {
     }),
   );
 
-  // Global filters & interceptors
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new TransformInterceptor());
 
-  // Swagger
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Nexo E-Commerce API')
     .setDescription('API para el sistema de e-commerce Nexo')
@@ -52,8 +64,11 @@ async function bootstrap() {
 
   const port = config.get<number>('PORT', 3000);
   await app.listen(port);
-  console.log(`🚀 Nexo API running on http://localhost:${port}`);
-  console.log(`📚 Swagger docs at http://localhost:${port}/api/docs`);
+
+  const appUrl = getPublicAppUrl(config.get<string>('APP_URL'), port);
+  console.log(`[bootstrap] Nexo API running on ${appUrl}`);
+  console.log(`[bootstrap] Swagger docs at ${appUrl}/api/docs`);
+  console.log(`[bootstrap] Allowed CORS origins: ${allowedOrigins.join(', ')}`);
 }
 
 bootstrap();

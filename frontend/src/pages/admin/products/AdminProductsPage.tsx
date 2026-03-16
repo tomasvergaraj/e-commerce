@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useState } from 'react';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { productsApi } from '@/api/services';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, resolveAssetUrl } from '@/lib/utils';
 import { PageLoader } from '@/components/common/Loading';
 
 export default function AdminProductsPage() {
@@ -58,7 +58,7 @@ export default function AdminProductsPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0">
-                          <img src={product.images?.[0]?.url || 'https://placehold.co/80x80'} alt="" className="w-full h-full object-cover" />
+                          <img src={resolveAssetUrl(product.images?.[0]?.url) || 'https://placehold.co/80x80'} alt="" className="w-full h-full object-cover" />
                         </div>
                         <div>
                           <p className="font-medium">{product.name}</p>

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { productsApi, bannersApi, categoriesApi } from '@/api/services';
 import ProductCard from '@/components/store/ProductCard';
+import { resolveAssetUrl } from '@/lib/utils';
 
 type Banner = {
   id: string;
@@ -82,7 +83,7 @@ export default function HomePage() {
                 aria-hidden={index !== activeBanner}
               >
                 <img
-                  src={banner.imageUrl}
+                  src={resolveAssetUrl(banner.imageUrl)}
                   alt={banner.title}
                   className="w-full h-full object-cover opacity-80"
                 />

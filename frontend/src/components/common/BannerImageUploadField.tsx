@@ -1,6 +1,7 @@
 import { ChangeEvent, useEffect, useState } from 'react';
 import { Crop, Image as ImageIcon, Loader2, RefreshCw, Upload, X } from 'lucide-react';
 import { uploadApi } from '@/api/services';
+import { resolveAssetUrl } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 const OUTPUT_WIDTH = 1920;
@@ -331,7 +332,7 @@ export default function BannerImageUploadField({ value, onChange, disabled = fal
       ) : value ? (
         <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
           <div className="aspect-[16/5] bg-gray-100 dark:bg-gray-800">
-            <img src={value} alt="Banner seleccionado" className="w-full h-full object-cover" />
+            <img src={resolveAssetUrl(value)} alt="Banner seleccionado" className="w-full h-full object-cover" />
           </div>
           <div className="px-4 py-3 text-xs text-gray-500 flex items-center gap-2">
             <Crop size={14} />

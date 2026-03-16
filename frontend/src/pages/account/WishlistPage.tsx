@@ -5,7 +5,7 @@ import { Heart, ShoppingCart, Trash2 } from 'lucide-react';
 import { wishlistApi } from '@/api/services';
 import { useCartStore } from '@/stores/cartStore';
 import { useWishlistStore } from '@/stores/wishlistStore';
-import { cn, formatPrice } from '@/lib/utils';
+import { cn, formatPrice, resolveAssetUrl } from '@/lib/utils';
 import { PageLoader } from '@/components/common/Loading';
 import EmptyState from '@/components/common/EmptyState';
 import toast from 'react-hot-toast';
@@ -102,7 +102,7 @@ export default function WishlistPage() {
           return (
             <div key={item.id} className="card flex gap-4 p-4">
               <Link to={`/productos/${item.product.slug}`} className="h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                <img src={item.product.images?.[0]?.url || 'https://placehold.co/200x200'} alt="" className="h-full w-full object-cover" />
+                <img src={resolveAssetUrl(item.product.images?.[0]?.url) || 'https://placehold.co/200x200'} alt="" className="h-full w-full object-cover" />
               </Link>
 
               <div className="flex-1">

@@ -16,6 +16,7 @@ import { BannersModule } from './modules/banners/banners.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { UploadModule } from './modules/upload/upload.module';
     SettingsModule,
     AuditModule,
     UploadModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

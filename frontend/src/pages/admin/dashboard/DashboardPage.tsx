@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { DollarSign, ShoppingBag, Users, Package, AlertTriangle, Clock } from 'lucide-react';
 import { ordersApi, productsApi } from '@/api/services';
-import { formatPrice, formatDateTime, getOrderStatusLabel, getOrderStatusColor } from '@/lib/utils';
+import { formatPrice, formatDateTime, getOrderStatusLabel, getOrderStatusColor, resolveAssetUrl } from '@/lib/utils';
 import { PageLoader } from '@/components/common/Loading';
 
 export default function DashboardPage() {
@@ -71,7 +71,7 @@ export default function DashboardPage() {
             {lowStockItems.slice(0, 5).map((p: any) => (
               <div key={p.id} className="flex items-center gap-3 p-4">
                 <div className="w-10 h-10 rounded bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0">
-                  <img src={p.images?.[0]?.url || 'https://placehold.co/80x80'} alt="" className="w-full h-full object-cover" />
+                  <img src={resolveAssetUrl(p.images?.[0]?.url) || 'https://placehold.co/80x80'} alt="" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium">{p.name}</p>

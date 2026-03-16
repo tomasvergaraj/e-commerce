@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Loader2, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { productsApi } from '@/api/services';
-import { cn, formatPrice } from '@/lib/utils';
+import { cn, formatPrice, resolveAssetUrl } from '@/lib/utils';
 
 type SearchSuggestionProduct = {
   id: string;
@@ -206,7 +206,7 @@ export default function StoreSearchBox({
                 >
                   <div className="h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-800">
                     <img
-                      src={product.images?.[0]?.url || 'https://placehold.co/120x120/e2e8f0/94a3b8?text=Producto'}
+                      src={resolveAssetUrl(product.images?.[0]?.url) || 'https://placehold.co/120x120/e2e8f0/94a3b8?text=Producto'}
                       alt={product.name}
                       className="h-full w-full object-cover"
                     />

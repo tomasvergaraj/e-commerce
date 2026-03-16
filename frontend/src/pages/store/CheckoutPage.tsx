@@ -6,7 +6,7 @@ import { CreditCard, Truck, ChevronLeft, Loader2, ShieldCheck, CheckCircle2 } fr
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
 import { ordersApi, shippingApi, paymentsApi, usersApi } from '@/api/services';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, resolveAssetUrl } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 export default function CheckoutPage() {
@@ -309,7 +309,7 @@ export default function CheckoutPage() {
               {items.map((item) => (
                 <div key={item.id} className="flex gap-3">
                   <div className="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                    <img src={item.product?.images?.[0]?.url || 'https://placehold.co/100x100'} alt="" className="w-full h-full object-cover" />
+                    <img src={resolveAssetUrl(item.product?.images?.[0]?.url) || 'https://placehold.co/100x100'} alt="" className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium line-clamp-1">{item.product?.name}</p>
