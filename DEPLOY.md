@@ -48,6 +48,15 @@ El archivo [backend/railway.json](/c:/Users/19726539-6/Desktop/Sistemas/Projects
 
 1. Agrega un servicio PostgreSQL dentro del mismo proyecto de Railway.
 2. Copia la `DATABASE_URL` que te entregue Railway.
+3. En el servicio `backend`, crea una variable `DATABASE_URL` apuntando a la base del proyecto.
+
+Ejemplo en Railway:
+
+```env
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+```
+
+Si prefieres referenciar variables separadas, el contenedor tambien acepta `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` y `PGDATABASE`, pero `DATABASE_URL` sigue siendo la opcion recomendada.
 
 ### 3. Volume para imagenes
 
@@ -74,6 +83,7 @@ UPLOAD_DIR=/app/uploads
 
 Notas:
 
+- En Railway, `DATABASE_URL` debe existir realmente dentro del servicio `backend`; no basta con crear la base si el backend no tiene la referencia.
 - `FRONTEND_URL` cubre tu dominio principal.
 - `CORS_ORIGINS` puede incluir varios dominios separados por coma.
 - `https://*.vercel.app` sirve para previews y ramas desplegadas en Vercel.
@@ -209,6 +219,7 @@ Sintoma:
 
 Revision:
 
+- Si los logs muestran `Environment variable not found: DATABASE_URL`, agrega `DATABASE_URL=${{Postgres.DATABASE_URL}}` en el servicio backend de Railway.
 - Ejecuta `npm run db:migrate:prod`.
 - Luego, si quieres datos demo, ejecuta `npm run db:seed`.
 
