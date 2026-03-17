@@ -77,21 +77,27 @@ Define estas variables en Railway:
 DATABASE_URL=postgresql://...
 JWT_SECRET=usa-un-secreto-largo-y-random
 JWT_EXPIRES=7d
+ENABLE_SWAGGER=false
 NODE_ENV=production
 PORT=3000
 FRONTEND_URL=https://tu-demo.vercel.app
 CORS_ORIGINS=https://tu-demo.vercel.app,https://*.vercel.app
 APP_URL=https://tu-backend.up.railway.app
 UPLOAD_DIR=/app/uploads
+REQUEST_BODY_LIMIT=1mb
 ```
 
 Notas:
 
 - En Railway, `DATABASE_URL` debe existir realmente dentro del servicio `backend`; no basta con crear la base si el backend no tiene la referencia.
+- En produccion, `JWT_SECRET` debe ser realmente largo y aleatorio. El backend ahora rechaza secretos cortos o valores por defecto inseguros.
 - `FRONTEND_URL` cubre tu dominio principal.
 - `CORS_ORIGINS` puede incluir varios dominios separados por coma.
+- No uses `CORS_ORIGINS=*` en produccion.
 - `https://*.vercel.app` sirve para previews y ramas desplegadas en Vercel.
 - `APP_URL` se usa para logs y referencias publicas del backend.
+- `ENABLE_SWAGGER=false` evita exponer la documentacion fuera de desarrollo, salvo que realmente la necesites.
+- `REQUEST_BODY_LIMIT` define el maximo de payload JSON/urlencoded aceptado por la API.
 
 ### 5. Build y arranque
 
@@ -126,8 +132,11 @@ El script de seed detecta automaticamente Railway y usa el archivo compilado del
 Prueba estas rutas:
 
 - `https://tu-backend.up.railway.app/api/health`
-- `https://tu-backend.up.railway.app/api/docs`
 - `https://tu-backend.up.railway.app/api/settings/public`
+
+Opcional si habilitaste Swagger explicitamente:
+
+- `https://tu-backend.up.railway.app/api/docs`
 
 Si subes una imagen desde admin, verifica tambien una URL tipo:
 
@@ -202,6 +211,7 @@ Revision:
 
 - `FRONTEND_URL` y `CORS_ORIGINS` deben apuntar al dominio real de Vercel.
 - Si usas previews de Vercel, agrega `https://*.vercel.app`.
+- No uses `*` como origen permitido si vas a enviar tokens o credenciales.
 
 ### Las imagenes no cargan
 

@@ -1,9 +1,14 @@
-import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { UserRole } from '@prisma/client';
 import { PrismaService } from '../../common/prisma.service';
 import { RegisterDto, LoginDto, ChangePasswordDto } from './dto/auth.dto';
-import { UserRole } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -13,22 +18,23 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const exists = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (exists) throw new ConflictException('El email ya está registrado');
+    const normalizedEmail = dto.email.trim().toLowerCase();
+    const exists = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });
+    if (exists) throw new ConflictException('El email ya esta registrado');
 
     const hashed = await bcrypt.hash(dto.password, 12);
     const user = await this.prisma.user.create({
       data: {
-        email: dto.email,
+        email: normalizedEmail,
         password: hashed,
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        phone: dto.phone,
+        firstName: dto.firstName.trim(),
+        lastName: dto.lastName.trim(),
+        phone: dto.phone?.trim() || null,
         role: UserRole.CUSTOMER,
       },
     });
 
-    const token = this.signToken(user.id, user.email, user.role);
+    const token = this.signToken(user.id, normalizedEmail, user.role);
     return {
       token,
       user: this.sanitizeUser(user),
@@ -36,12 +42,13 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (!user || user.deletedAt) throw new UnauthorizedException('Credenciales inválidas');
+    const normalizedEmail = dto.email.trim().toLowerCase();
+    const user = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });
+    if (!user || user.deletedAt) throw new UnauthorizedException('Credenciales invalidas');
     if (user.status !== 'ACTIVE') throw new UnauthorizedException('Cuenta deshabilitada');
 
     const valid = await bcrypt.compare(dto.password, user.password);
-    if (!valid) throw new UnauthorizedException('Credenciales inválidas');
+    if (!valid) throw new UnauthorizedException('Credenciales invalidas');
 
     await this.prisma.user.update({
       where: { id: user.id },
@@ -60,7 +67,10 @@ export class AuthService {
     if (!user) throw new BadRequestException('Usuario no encontrado');
 
     const valid = await bcrypt.compare(dto.currentPassword, user.password);
-    if (!valid) throw new BadRequestException('Contraseña actual incorrecta');
+    if (!valid) throw new BadRequestException('Contrasena actual incorrecta');
+    if (dto.currentPassword === dto.newPassword) {
+      throw new BadRequestException('La nueva contrasena debe ser distinta a la actual');
+    }
 
     const hashed = await bcrypt.hash(dto.newPassword, 12);
     await this.prisma.user.update({
@@ -68,7 +78,7 @@ export class AuthService {
       data: { password: hashed },
     });
 
-    return { message: 'Contraseña actualizada correctamente' };
+    return { message: 'Contrasena actualizada correctamente' };
   }
 
   async getProfile(userId: string) {
