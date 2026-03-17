@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
-  ArrowRight, Truck, Shield, Headphones, CreditCard, ChevronLeft, ChevronRight,
+  ArrowRight, Truck, Shield, Headphones, CreditCard, ChevronLeft, ChevronRight, Sparkles,
 } from 'lucide-react';
 import { productsApi, bannersApi, categoriesApi } from '@/api/services';
 import { HomePageSkeleton } from '@/components/common/Loading';
 import ProductCard from '@/components/store/ProductCard';
 import { asArray, resolveAssetUrl } from '@/lib/utils';
+import { useAuthStore } from '@/stores/authStore';
 
 type Banner = {
   id: string;
@@ -18,6 +19,7 @@ type Banner = {
 };
 
 export default function HomePage() {
+  const { isAuthenticated, isAdmin, user } = useAuthStore();
   const { data: banners, isLoading: isBannersLoading } = useQuery({ queryKey: ['banners'], queryFn: () => bannersApi.getActive() });
   const { data: featured, isLoading: isFeaturedLoading } = useQuery({ queryKey: ['featured'], queryFn: () => productsApi.getFeatured(8) });
   const { data: onSale, isLoading: isOnSaleLoading } = useQuery({ queryKey: ['on-sale'], queryFn: () => productsApi.getOnSale(4) });
@@ -64,6 +66,12 @@ export default function HomePage() {
 
   const currentBanner = bannerList[activeBanner] ?? bannerList[0];
   const hasMultipleBanners = bannerList.length > 1;
+  const currentHour = new Date().getHours();
+  const greeting =
+    currentHour < 12 ? 'Buenos dias' :
+    currentHour < 20 ? 'Buenas tardes' :
+    'Buenas noches';
+  const displayName = user?.firstName?.trim() || user?.email?.split('@')[0] || 'que bueno verte';
 
   const goToPreviousBanner = () => {
     setActiveBanner((current) => (current === 0 ? bannerList.length - 1 : current - 1));
@@ -173,6 +181,45 @@ export default function HomePage() {
               </div>
             </>
           )}
+        </section>
+      )}
+
+      {isAuthenticated && (
+        <section className="border-b border-primary-100 bg-primary-50/70 dark:border-primary-900/60 dark:bg-primary-950/30">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
+            <div className="rounded-[28px] border border-primary-200/80 bg-white/80 px-5 py-5 shadow-sm backdrop-blur dark:border-primary-900 dark:bg-gray-950/70 md:px-6">
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                <div className="min-w-0">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-600 dark:bg-primary-500/15 dark:text-primary-300">
+                    <Sparkles size={14} />
+                    Sesion iniciada
+                  </span>
+                  <h2 className="mt-3 text-2xl font-bold text-gray-900 dark:text-white">
+                    {greeting}, {displayName}
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-300">
+                    Tu cuenta ya esta activa. Puedes retomar tu compra, revisar pedidos o actualizar tu perfil sin volver a iniciar sesion.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <Link to="/cuenta/pedidos" className="btn-primary inline-flex items-center gap-2 text-sm">
+                    Mis pedidos <ArrowRight size={16} />
+                  </Link>
+                  <Link to="/cuenta/perfil" className="inline-flex items-center rounded-full border border-gray-200 px-5 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-primary-300 hover:text-primary-500 dark:border-gray-700 dark:text-gray-200 dark:hover:border-primary-700">
+                    Mi perfil
+                  </Link>
+                  <Link to="/cuenta/favoritos" className="inline-flex items-center rounded-full border border-gray-200 px-5 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-primary-300 hover:text-primary-500 dark:border-gray-700 dark:text-gray-200 dark:hover:border-primary-700">
+                    Favoritos
+                  </Link>
+                  {isAdmin && (
+                    <Link to="/admin" className="inline-flex items-center rounded-full border border-primary-200 bg-primary-500/10 px-5 py-3 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-500/15 dark:border-primary-800 dark:text-primary-300">
+                      Panel admin
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
       )}
 

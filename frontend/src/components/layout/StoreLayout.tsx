@@ -100,6 +100,7 @@ export default function StoreLayout() {
   const storeEmail = settings.store_email?.trim() || 'contacto@nexo.cl';
   const storePhone = settings.store_phone?.trim() || '+56 9 1234 5678';
   const storeAddress = settings.store_address?.trim() || 'Santiago, Chile';
+  const displayName = user?.firstName?.trim() || user?.email?.split('@')[0] || 'tu cuenta';
   const featuredCategories = categories.filter((category) => !category.parentId).slice(0, 4);
   const trustHighlights = [
     { label: 'Compra protegida', Icon: ShieldCheck },
@@ -218,8 +219,21 @@ export default function StoreLayout() {
 
                 {isAuthenticated ? (
                   <div className="relative">
-                    <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex items-center gap-1 p-2 text-gray-600 dark:text-gray-300 hover:text-primary-500">
-                      <User size={20} />
+                    <button
+                      onClick={() => setUserMenuOpen(!userMenuOpen)}
+                      className="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-2 py-1.5 text-gray-600 transition-colors hover:border-primary-200 hover:text-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-primary-800"
+                    >
+                      <div className="hidden text-right leading-tight lg:block">
+                        <span className="block text-[10px] font-semibold uppercase tracking-[0.22em] text-primary-500">
+                          Sesion activa
+                        </span>
+                        <span className="block max-w-[140px] truncate text-sm font-semibold text-gray-900 dark:text-white">
+                          Hola, {displayName}
+                        </span>
+                      </div>
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-500 text-white">
+                        <User size={16} />
+                      </span>
                       <ChevronDown size={14} />
                     </button>
                     {userMenuOpen && (
