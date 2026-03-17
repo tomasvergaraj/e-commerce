@@ -113,8 +113,8 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="relative z-10 flex h-full items-center">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
+          <div className="relative z-10 flex h-full items-end md:items-center">
+            <div className="max-w-7xl mx-auto px-4 pb-24 sm:px-6 w-full md:pb-0">
               <div className="max-w-xl">
                 {hasMultipleBanners && (
                   <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-medium uppercase tracking-[0.3em] text-white/80 backdrop-blur-sm">
@@ -137,7 +137,7 @@ export default function HomePage() {
                     Explorar catálogo
                   </Link>
                   {hasMultipleBanners && (
-                    <span className="text-sm text-white/70">
+                    <span className="hidden text-sm text-white/70 sm:inline">
                       Carrusel automático cada 5 segundos
                     </span>
                   )}
@@ -148,7 +148,7 @@ export default function HomePage() {
 
           {hasMultipleBanners && (
             <>
-              <div className="absolute inset-y-0 left-0 right-0 z-10 flex items-center justify-between px-3 md:px-6 pointer-events-none">
+              <div className="absolute inset-y-0 left-0 right-0 z-10 hidden items-center justify-between px-3 pointer-events-none md:flex md:px-6">
                 <button
                   type="button"
                   onClick={goToPreviousBanner}
@@ -167,7 +167,41 @@ export default function HomePage() {
                 </button>
               </div>
 
-              <div className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/15 bg-black/20 px-3 py-2 backdrop-blur-sm">
+              <div className="absolute bottom-5 left-4 right-4 z-10 flex items-center justify-between pointer-events-none md:hidden">
+                <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/15 bg-black/20 px-3 py-2 backdrop-blur-sm">
+                  {bannerList.map((banner, index) => (
+                    <button
+                      key={`${banner.id}-mobile-indicator`}
+                      type="button"
+                      onClick={() => setActiveBanner(index)}
+                      className={`h-2.5 rounded-full transition-all ${index === activeBanner ? 'w-8 bg-white' : 'w-2.5 bg-white/45 hover:bg-white/70'}`}
+                      aria-label={`Ir al banner ${index + 1}`}
+                      aria-pressed={index === activeBanner}
+                    />
+                  ))}
+                </div>
+
+                <div className="pointer-events-auto flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={goToPreviousBanner}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/25 text-white backdrop-blur-sm transition-colors hover:bg-black/45"
+                    aria-label="Banner anterior"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={goToNextBanner}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/25 text-white backdrop-blur-sm transition-colors hover:bg-black/45"
+                    aria-label="Banner siguiente"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="absolute bottom-6 left-1/2 z-10 hidden -translate-x-1/2 items-center gap-2 rounded-full border border-white/15 bg-black/20 px-3 py-2 backdrop-blur-sm md:flex">
                 {bannerList.map((banner, index) => (
                   <button
                     key={`${banner.id}-indicator`}
