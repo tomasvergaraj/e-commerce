@@ -119,6 +119,7 @@ npm run db:seed
 ```
 
 Haz esto desde la shell de Railway o como comando puntual del servicio.
+El script de seed detecta automaticamente Railway y usa el archivo compilado del backend para evitar errores de `ts-node` dentro del contenedor.
 
 ### 7. Verificaciones del backend
 
