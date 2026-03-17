@@ -8,6 +8,29 @@ export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);
 }
 
+export function asArray<T>(value: unknown): T[] {
+  if (Array.isArray(value)) {
+    return value as T[];
+  }
+
+  const data = (value as any)?.data;
+  if (Array.isArray(data)) {
+    return data as T[];
+  }
+
+  const items = (value as any)?.items;
+  if (Array.isArray(items)) {
+    return items as T[];
+  }
+
+  const nestedItems = (value as any)?.data?.items;
+  if (Array.isArray(nestedItems)) {
+    return nestedItems as T[];
+  }
+
+  return [];
+}
+
 function getRuntimeOrigin() {
   if (typeof window !== 'undefined') {
     return window.location.origin;

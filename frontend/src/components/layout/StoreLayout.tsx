@@ -28,7 +28,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { useWishlistStore } from '@/stores/wishlistStore';
 import { categoriesApi, settingsApi } from '@/api/services';
-import { cn } from '@/lib/utils';
+import { asArray, cn } from '@/lib/utils';
 import { useTransientFlag } from '@/lib/useTransientFlag';
 import StoreSearchBox from '@/components/layout/StoreSearchBox';
 
@@ -95,8 +95,8 @@ export default function StoreLayout() {
   });
 
   const settings = ((publicSettingsData as any)?.data || publicSettingsData || {}) as PublicSettings;
-  const infoPages = ((publicPagesData as any)?.data || publicPagesData || []) as PublicPageLink[];
-  const categories = ((categoriesData as any)?.data || categoriesData || []) as NavigationCategory[];
+  const infoPages = asArray<PublicPageLink>(publicPagesData);
+  const categories = asArray<NavigationCategory>(categoriesData);
   const storeName = settings.store_name?.trim() || 'Nexo';
   const storeDescription = settings.store_description?.trim() || 'Tu tienda de tecnología y desarrollo en Chile.';
   const storeEmail = settings.store_email?.trim() || 'contacto@nexo.cl';

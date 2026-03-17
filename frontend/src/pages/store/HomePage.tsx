@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { productsApi, bannersApi, categoriesApi } from '@/api/services';
 import ProductCard from '@/components/store/ProductCard';
-import { resolveAssetUrl } from '@/lib/utils';
+import { asArray, resolveAssetUrl } from '@/lib/utils';
 
 type Banner = {
   id: string;
@@ -23,11 +23,11 @@ export default function HomePage() {
   const { data: brands } = useQuery({ queryKey: ['brands'], queryFn: () => productsApi.getBrands() });
   const { data: categories } = useQuery({ queryKey: ['categories-tree'], queryFn: () => categoriesApi.getTree() });
 
-  const bannerList = ((banners as any)?.data || banners || []) as Banner[];
-  const featuredList = (featured as any)?.data || featured || [];
-  const saleList = (onSale as any)?.data || onSale || [];
-  const brandsList = ((brands as any)?.data || brands || []) as string[];
-  const catList = (categories as any)?.data || categories || [];
+  const bannerList = asArray<Banner>(banners);
+  const featuredList = asArray<any>(featured);
+  const saleList = asArray<any>(onSale);
+  const brandsList = asArray<string>(brands);
+  const catList = asArray<any>(categories);
 
   const [activeBanner, setActiveBanner] = useState(0);
   const [isCarouselPaused, setIsCarouselPaused] = useState(false);
