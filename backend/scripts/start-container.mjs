@@ -68,7 +68,10 @@ async function main() {
   if (!databaseUrl) {
     console.error('[startup] Missing database connection configuration.');
     console.error(
-      '[startup] Set DATABASE_URL in Railway or create a service variable reference like ${{Postgres.DATABASE_URL}}.',
+      '[startup] Set DATABASE_URL in Railway or create a reference variable like ${{YourPostgresServiceName.DATABASE_URL}}.',
+    );
+    console.error(
+      '[startup] Use the exact PostgreSQL service name from your Railway project. If it is named Postgres, the value is ${{Postgres.DATABASE_URL}}.',
     );
     console.error(
       '[startup] As a fallback, this container also accepts PGHOST, PGPORT, PGUSER, PGPASSWORD and PGDATABASE.',

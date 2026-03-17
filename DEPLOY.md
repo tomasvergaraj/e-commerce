@@ -56,7 +56,11 @@ Ejemplo en Railway:
 DATABASE_URL=${{Postgres.DATABASE_URL}}
 ```
 
-Si prefieres referenciar variables separadas, el contenedor tambien acepta `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` y `PGDATABASE`, pero `DATABASE_URL` sigue siendo la opcion recomendada.
+Importante:
+
+- `Postgres` en el ejemplo es el nombre del servicio de base de datos dentro de Railway.
+- Si tu servicio tiene otro nombre, usa ese nombre exacto. Ejemplo: `DATABASE_URL=${{postgresql.DATABASE_URL}}`.
+- Si prefieres referenciar variables separadas, el contenedor tambien acepta `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` y `PGDATABASE`, pero `DATABASE_URL` sigue siendo la opcion recomendada.
 
 ### 3. Volume para imagenes
 
@@ -219,7 +223,7 @@ Sintoma:
 
 Revision:
 
-- Si los logs muestran `Environment variable not found: DATABASE_URL`, agrega `DATABASE_URL=${{Postgres.DATABASE_URL}}` en el servicio backend de Railway.
+- Si los logs muestran `Environment variable not found: DATABASE_URL` o `Missing database connection configuration`, agrega `DATABASE_URL=${{NombreExactoDelServicioPostgres.DATABASE_URL}}` en el servicio backend de Railway.
 - Ejecuta `npm run db:migrate:prod`.
 - Luego, si quieres datos demo, ejecuta `npm run db:seed`.
 
