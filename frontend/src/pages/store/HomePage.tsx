@@ -5,6 +5,7 @@ import {
   ArrowRight, Truck, Shield, Headphones, CreditCard, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { productsApi, bannersApi, categoriesApi } from '@/api/services';
+import { HomePageSkeleton } from '@/components/common/Loading';
 import ProductCard from '@/components/store/ProductCard';
 import { asArray, resolveAssetUrl } from '@/lib/utils';
 
@@ -17,11 +18,11 @@ type Banner = {
 };
 
 export default function HomePage() {
-  const { data: banners } = useQuery({ queryKey: ['banners'], queryFn: () => bannersApi.getActive() });
-  const { data: featured } = useQuery({ queryKey: ['featured'], queryFn: () => productsApi.getFeatured(8) });
-  const { data: onSale } = useQuery({ queryKey: ['on-sale'], queryFn: () => productsApi.getOnSale(4) });
-  const { data: brands } = useQuery({ queryKey: ['brands'], queryFn: () => productsApi.getBrands() });
-  const { data: categories } = useQuery({ queryKey: ['categories-tree'], queryFn: () => categoriesApi.getTree() });
+  const { data: banners, isLoading: isBannersLoading } = useQuery({ queryKey: ['banners'], queryFn: () => bannersApi.getActive() });
+  const { data: featured, isLoading: isFeaturedLoading } = useQuery({ queryKey: ['featured'], queryFn: () => productsApi.getFeatured(8) });
+  const { data: onSale, isLoading: isOnSaleLoading } = useQuery({ queryKey: ['on-sale'], queryFn: () => productsApi.getOnSale(4) });
+  const { data: brands, isLoading: isBrandsLoading } = useQuery({ queryKey: ['brands'], queryFn: () => productsApi.getBrands() });
+  const { data: categories, isLoading: isCategoriesLoading } = useQuery({ queryKey: ['categories-tree'], queryFn: () => categoriesApi.getTree() });
 
   const bannerList = asArray<Banner>(banners);
   const featuredList = asArray<any>(featured);
@@ -53,6 +54,14 @@ export default function HomePage() {
     return () => window.clearInterval(intervalId);
   }, [bannerList.length, isCarouselPaused]);
 
+  const isInitialLoading =
+    (isBannersLoading || isFeaturedLoading || isOnSaleLoading || isBrandsLoading || isCategoriesLoading)
+    && bannerList.length === 0
+    && featuredList.length === 0
+    && saleList.length === 0
+    && brandsList.length === 0
+    && catList.length === 0;
+
   const currentBanner = bannerList[activeBanner] ?? bannerList[0];
   const hasMultipleBanners = bannerList.length > 1;
 
@@ -63,6 +72,10 @@ export default function HomePage() {
   const goToNextBanner = () => {
     setActiveBanner((current) => (current + 1) % bannerList.length);
   };
+
+  if (isInitialLoading) {
+    return <HomePageSkeleton />;
+  }
 
   return (
     <div>

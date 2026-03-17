@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { SlidersHorizontal, ChevronRight, X } from 'lucide-react';
 import { productsApi, categoriesApi } from '@/api/services';
 import ProductCard from '@/components/store/ProductCard';
-import { PageLoader } from '@/components/common/Loading';
+import { CatalogPageSkeleton } from '@/components/common/Loading';
 import EmptyState from '@/components/common/EmptyState';
 import { asArray, asPaginated } from '@/lib/utils';
 
@@ -53,6 +53,10 @@ export default function CatalogPage() {
     params.set('page', '1');
     setSearchParams(params);
   };
+
+  if (isLoading) {
+    return <CatalogPageSkeleton />;
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -182,9 +186,7 @@ export default function CatalogPage() {
 
         {/* Product grid */}
         <div>
-          {isLoading ? (
-            <PageLoader />
-          ) : result.items.length === 0 ? (
+          {result.items.length === 0 ? (
             <EmptyState
               title="No se encontraron productos"
               description="Intenta con otros filtros o categorías"

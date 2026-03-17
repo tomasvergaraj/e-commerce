@@ -8,11 +8,11 @@ import {
 import { productsApi, reviewsApi } from '@/api/services';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
-import { cn, formatPrice, resolveAssetUrl } from '@/lib/utils';
+import { asArray, cn, formatPrice, resolveAssetUrl } from '@/lib/utils';
 import { useTransientFlag } from '@/lib/useTransientFlag';
 import ProductCard from '@/components/store/ProductCard';
 import WishlistButton from '@/components/store/WishlistButton';
-import { PageLoader } from '@/components/common/Loading';
+import { ProductDetailSkeleton } from '@/components/common/Loading';
 import toast from 'react-hot-toast';
 
 type ReviewFormValues = {
@@ -71,7 +71,7 @@ export default function ProductDetailPage() {
     enabled: isAuthenticated && !!product?.id,
   });
 
-  const relatedList = (related as any)?.data || related || [];
+  const relatedList = asArray<any>(related);
   const reviewEligibility = ((reviewEligibilityData as any)?.data || reviewEligibilityData || null) as ReviewEligibility | null;
 
   useEffect(() => {
@@ -105,12 +105,12 @@ export default function ProductDetailPage() {
     },
   });
 
-  if (isLoading) return <PageLoader />;
+  if (isLoading) return <ProductDetailSkeleton />;
   if (!product) return <div className="text-center py-20">Producto no encontrado</div>;
 
-  const images = product.images || [];
-  const variants = product.variants || [];
-  const categories = product.categories || [];
+  const images = asArray<any>(product.images);
+  const variants = asArray<any>(product.variants);
+  const categories = asArray<any>(product.categories);
   const primaryCat = categories.find((c: any) => c.isPrimary)?.category || categories[0]?.category;
 
   const activeVariant = variants.find((v: any) => v.id === selectedVariant);

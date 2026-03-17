@@ -11,7 +11,7 @@ import {
   Phone,
 } from 'lucide-react';
 import { settingsApi } from '@/api/services';
-import { PageLoader } from '@/components/common/Loading';
+import { ContentPageSkeleton } from '@/components/common/Loading';
 import { asArray } from '@/lib/utils';
 
 type CmsPage = {
@@ -215,7 +215,7 @@ export default function PageContent() {
     };
   }, [intro, page, storeName]);
 
-  if (isLoading) return <PageLoader />;
+  if (isLoading) return <ContentPageSkeleton />;
 
   if (!page) {
     return (
