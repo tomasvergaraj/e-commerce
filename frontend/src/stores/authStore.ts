@@ -10,6 +10,12 @@ interface User {
   addresses?: any[];
 }
 
+type LogoutOptions = {
+  hardRefresh?: boolean;
+  redirectTo?: string;
+  clearGuestSession?: boolean;
+};
+
 interface AuthState {
   token: string | null;
   user: User | null;
@@ -17,7 +23,7 @@ interface AuthState {
   isAdmin: boolean;
   setAuth: (token: string, user: User) => void;
   setUser: (user: User) => void;
-  logout: () => void;
+  logout: (options?: LogoutOptions) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => {
@@ -45,10 +51,16 @@ export const useAuthStore = create<AuthState>((set) => {
       localStorage.setItem('nexo_user', JSON.stringify(user));
       set({ user });
     },
-    logout: () => {
+    logout: (options) => {
       localStorage.removeItem('nexo_token');
       localStorage.removeItem('nexo_user');
+      if (options?.clearGuestSession) {
+        sessionStorage.removeItem('nexo_session');
+      }
       set({ token: null, user: null, isAuthenticated: false, isAdmin: false });
+      if (options?.hardRefresh && typeof window !== 'undefined') {
+        window.location.replace(options.redirectTo || '/');
+      }
     },
   };
 });

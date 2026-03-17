@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import {
   LayoutDashboard, Package, ShoppingBag, Users, Settings, Image,
@@ -22,7 +22,6 @@ const menuItems = [
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
   const { user, logout } = useAuthStore();
 
   return (
@@ -78,7 +77,10 @@ export default function AdminLayout() {
                 <p className="font-medium text-gray-900 dark:text-gray-100">{user?.firstName}</p>
                 <p className="text-xs text-gray-500">{user?.role}</p>
               </div>
-              <button onClick={() => { logout(); navigate('/login'); }} className="p-2 text-gray-400 hover:text-red-500">
+              <button
+                onClick={() => logout({ clearGuestSession: true, hardRefresh: true, redirectTo: '/login' })}
+                className="p-2 text-gray-400 hover:text-red-500"
+              >
                 <LogOut size={18} />
               </button>
             </div>

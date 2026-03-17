@@ -1,4 +1,4 @@
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -76,8 +76,6 @@ export default function StoreLayout() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { active: isCartAnimating, trigger: triggerCartAnimation } = useTransientFlag(520);
-  const navigate = useNavigate();
-
   const { data: publicSettingsData } = useQuery({
     queryKey: ['public-settings'],
     queryFn: () => settingsApi.getPublic(),
@@ -240,9 +238,8 @@ export default function StoreLayout() {
                           )}
                           <button
                             onClick={() => {
-                              logout();
                               setUserMenuOpen(false);
-                              navigate('/');
+                              logout({ clearGuestSession: true, hardRefresh: true, redirectTo: '/' });
                             }}
                             className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
                           >
