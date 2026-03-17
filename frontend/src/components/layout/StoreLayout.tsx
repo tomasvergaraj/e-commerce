@@ -140,7 +140,7 @@ export default function StoreLayout() {
   }, [cartPulseTick, triggerCartAnimation]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex min-h-screen flex-col overflow-x-hidden">
       <div className="bg-primary-600 text-white text-xs py-1.5 text-center">
         Envío gratis en compras sobre $50.000 · Despacho a todo Chile
       </div>
@@ -149,10 +149,10 @@ export default function StoreLayout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="py-4">
             <div className="flex items-center justify-between gap-3">
-              <Link to="/" className="flex items-center gap-2 shrink-0">
+              <Link to="/" className="flex min-w-0 items-center gap-2 shrink-0">
                 <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">N</div>
-                <div>
-                  <span className="block text-xl font-bold text-gray-900 dark:text-white">{storeName}</span>
+                <div className="min-w-0">
+                  <span className="block truncate text-xl font-bold text-gray-900 dark:text-white">{storeName}</span>
                   <span className="hidden xl:block text-xs text-gray-500 dark:text-gray-400">Tienda en línea con despacho a todo Chile</span>
                 </div>
               </Link>
@@ -342,7 +342,7 @@ export default function StoreLayout() {
         )}
       </header>
 
-      <main className="flex-1">
+      <main className="min-w-0 flex-1">
         <Outlet />
       </main>
 

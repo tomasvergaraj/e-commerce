@@ -61,7 +61,7 @@ export default function CatalogPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
+      <nav className="mb-6 flex flex-wrap items-center gap-2 text-sm text-gray-500">
         <Link to="/" className="hover:text-primary-500">Inicio</Link>
         <ChevronRight size={14} />
         {categorySlug ? (
@@ -75,19 +75,19 @@ export default function CatalogPage() {
         )}
       </nav>
 
-      <div className="flex items-center justify-between mb-6">
-        <div>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold">{catData?.name || (search ? `Resultados para "${search}"` : 'Todos los productos')}</h1>
           <p className="text-sm text-gray-500 mt-1">{result.total} producto{result.total !== 1 ? 's' : ''}</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button onClick={() => setFiltersOpen(!filtersOpen)} className="btn-outline flex items-center gap-2 text-sm md:hidden">
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
+          <button onClick={() => setFiltersOpen(!filtersOpen)} className="btn-outline inline-flex w-full items-center justify-center gap-2 text-sm md:hidden">
             <SlidersHorizontal size={16} /> Filtros
           </button>
           <select
             value={sortBy}
             onChange={(e) => updateParams('sortBy', e.target.value)}
-            className="input-field text-sm py-2 w-auto"
+            className="input-field w-full text-sm sm:w-auto sm:min-w-[13rem]"
           >
             <option value="">Relevancia</option>
             <option value="newest">Más recientes</option>

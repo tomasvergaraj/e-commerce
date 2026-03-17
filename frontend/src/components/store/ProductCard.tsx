@@ -39,7 +39,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Link to={`/productos/${product.slug}`} className="group card overflow-hidden border-gray-200/80 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+    <Link to={`/productos/${product.slug}`} className="group card block h-full min-w-0 overflow-hidden border-gray-200/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
       {/* Image */}
       <div className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-800">
         <img
@@ -48,27 +48,28 @@ export default function ProductCard({ product }: ProductCardProps) {
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
         {hasDiscount && (
-          <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+          <span className="absolute left-2 top-2 max-w-[calc(100%-4.75rem)] truncate rounded-full bg-red-500 px-2 py-1 text-[11px] font-bold text-white sm:left-3 sm:top-3 sm:max-w-[calc(100%-5.5rem)] sm:text-xs">
             -{Math.round((1 - product.price / product.comparePrice) * 100)}%
           </span>
         )}
         {product.isFeatured && !hasDiscount && (
-          <span className="absolute top-3 left-3 bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+          <span className="absolute left-2 top-2 max-w-[calc(100%-4.75rem)] truncate rounded-full bg-primary-500 px-2 py-1 text-[11px] font-bold text-white sm:left-3 sm:top-3 sm:max-w-[calc(100%-5.5rem)] sm:text-xs">
             Destacado
           </span>
         )}
         <WishlistButton
           productId={product.id}
-          className="absolute top-3 right-3 h-10 w-10 rounded-full shadow-md backdrop-blur-sm"
-          iconSize={18}
+          className="absolute right-2 top-2 h-9 w-9 rounded-full shadow-md backdrop-blur-sm sm:right-3 sm:top-3 sm:h-10 sm:w-10"
+          iconSize={16}
         />
         <button
           onClick={handleAddToCart}
           disabled={isOutOfStock}
           className={cn(
-            'absolute bottom-3 right-3 inline-flex items-center gap-2 overflow-hidden rounded-full bg-white px-3 py-2 text-xs font-medium shadow-md transition-all hover:bg-primary-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60 dark:bg-gray-800 md:px-2.5 md:py-2.5 md:opacity-0 md:group-hover:opacity-100',
+            'absolute bottom-2 right-2 inline-flex h-10 max-w-[calc(100%-1rem)] items-center justify-center gap-1.5 overflow-hidden rounded-full bg-white px-2.5 py-2 text-xs font-medium shadow-md transition-all hover:bg-primary-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60 dark:bg-gray-800 sm:bottom-3 sm:right-3 sm:h-auto sm:max-w-[calc(100%-1.5rem)] sm:px-3 sm:py-2 md:px-2.5 md:py-2.5 md:opacity-0 md:group-hover:opacity-100',
             isCartFeedbackActive && 'cart-button-pop bg-primary-500 text-white shadow-lg shadow-primary-500/25',
           )}
+          aria-label={hasVariants ? 'Elegir variante' : 'Agregar al carrito'}
         >
           <span
             aria-hidden="true"
@@ -77,8 +78,8 @@ export default function ProductCard({ product }: ProductCardProps) {
               isCartFeedbackActive && 'cart-ring-pop',
             )}
           />
-          <ShoppingCart size={18} className={cn('relative z-10', isCartFeedbackActive && 'cart-icon-pop')} />
-          <span className="md:hidden">{hasVariants ? 'Elegir' : 'Agregar'}</span>
+          <ShoppingCart size={16} className={cn('relative z-10 shrink-0', isCartFeedbackActive && 'cart-icon-pop')} />
+          <span className="hidden sm:inline md:hidden">{hasVariants ? 'Elegir' : 'Agregar'}</span>
         </button>
       </div>
 

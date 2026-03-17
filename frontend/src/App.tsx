@@ -41,6 +41,7 @@ import AdminCategoriesPage from '@/pages/admin/settings/AdminCategoriesPage';
 // Guards
 import ProtectedRoute from '@/components/common/ProtectedRoute';
 import AdminRoute from '@/components/common/AdminRoute';
+import ScrollToTop from '@/components/common/ScrollToTop';
 
 export default function App() {
   const fetchCart = useCartStore((s) => s.fetchCart);
@@ -50,49 +51,52 @@ export default function App() {
   }, [fetchCart]);
 
   return (
-    <Routes>
-      {/* Store */}
-      <Route element={<StoreLayout />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/productos" element={<CatalogPage />} />
-        <Route path="/categorias/:slug" element={<CatalogPage />} />
-        <Route path="/productos/:slug" element={<ProductDetailPage />} />
-        <Route path="/carrito" element={<CartPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
-        <Route path="/pedido-confirmado/:orderNumber" element={<OrderConfirmationPage />} />
-        <Route path="/pagina/:slug" element={<PageContent />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/registro" element={<RegisterPage />} />
-      </Route>
-
-      {/* Customer Account */}
-      <Route element={<ProtectedRoute />}>
-        <Route element={<AccountLayout />}>
-          <Route path="/cuenta/pedidos" element={<OrdersPage />} />
-          <Route path="/cuenta/pedidos/:orderNumber" element={<OrderDetailPage />} />
-          <Route path="/cuenta/perfil" element={<ProfilePage />} />
-          <Route path="/cuenta/direcciones" element={<AddressesPage />} />
-          <Route path="/cuenta/favoritos" element={<WishlistPage />} />
+    <>
+      <ScrollToTop />
+      <Routes>
+        {/* Store */}
+        <Route element={<StoreLayout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/productos" element={<CatalogPage />} />
+          <Route path="/categorias/:slug" element={<CatalogPage />} />
+          <Route path="/productos/:slug" element={<ProductDetailPage />} />
+          <Route path="/carrito" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/pedido-confirmado/:orderNumber" element={<OrderConfirmationPage />} />
+          <Route path="/pagina/:slug" element={<PageContent />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/registro" element={<RegisterPage />} />
         </Route>
-      </Route>
 
-      {/* Admin */}
-      <Route element={<AdminRoute />}>
-        <Route element={<AdminLayout />}>
-          <Route path="/admin" element={<DashboardPage />} />
-          <Route path="/admin/productos" element={<AdminProductsPage />} />
-          <Route path="/admin/productos/nuevo" element={<AdminProductFormPage />} />
-          <Route path="/admin/productos/:id/editar" element={<AdminProductFormPage />} />
-          <Route path="/admin/pedidos" element={<AdminOrdersPage />} />
-          <Route path="/admin/pedidos/:id" element={<AdminOrderDetailPage />} />
-          <Route path="/admin/clientes" element={<AdminCustomersPage />} />
-          <Route path="/admin/configuracion" element={<AdminSettingsPage />} />
-          <Route path="/admin/paginas" element={<AdminPagesPage />} />
-          <Route path="/admin/categorias" element={<AdminCategoriesPage />} />
-          <Route path="/admin/banners" element={<AdminBannersPage />} />
-          <Route path="/admin/resenas" element={<AdminReviewsPage />} />
+        {/* Customer Account */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AccountLayout />}>
+            <Route path="/cuenta/pedidos" element={<OrdersPage />} />
+            <Route path="/cuenta/pedidos/:orderNumber" element={<OrderDetailPage />} />
+            <Route path="/cuenta/perfil" element={<ProfilePage />} />
+            <Route path="/cuenta/direcciones" element={<AddressesPage />} />
+            <Route path="/cuenta/favoritos" element={<WishlistPage />} />
+          </Route>
         </Route>
-      </Route>
-    </Routes>
+
+        {/* Admin */}
+        <Route element={<AdminRoute />}>
+          <Route element={<AdminLayout />}>
+            <Route path="/admin" element={<DashboardPage />} />
+            <Route path="/admin/productos" element={<AdminProductsPage />} />
+            <Route path="/admin/productos/nuevo" element={<AdminProductFormPage />} />
+            <Route path="/admin/productos/:id/editar" element={<AdminProductFormPage />} />
+            <Route path="/admin/pedidos" element={<AdminOrdersPage />} />
+            <Route path="/admin/pedidos/:id" element={<AdminOrderDetailPage />} />
+            <Route path="/admin/clientes" element={<AdminCustomersPage />} />
+            <Route path="/admin/configuracion" element={<AdminSettingsPage />} />
+            <Route path="/admin/paginas" element={<AdminPagesPage />} />
+            <Route path="/admin/categorias" element={<AdminCategoriesPage />} />
+            <Route path="/admin/banners" element={<AdminBannersPage />} />
+            <Route path="/admin/resenas" element={<AdminReviewsPage />} />
+          </Route>
+        </Route>
+      </Routes>
+    </>
   );
 }
