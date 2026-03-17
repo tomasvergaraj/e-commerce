@@ -6,6 +6,7 @@ import { productsApi, categoriesApi } from '@/api/services';
 import ProductCard from '@/components/store/ProductCard';
 import { PageLoader } from '@/components/common/Loading';
 import EmptyState from '@/components/common/EmptyState';
+import { asArray, asPaginated } from '@/lib/utils';
 
 export default function CatalogPage() {
   const { slug: categorySlug } = useParams();
@@ -41,9 +42,9 @@ export default function CatalogPage() {
     queryFn: () => categoriesApi.getAll(),
   });
 
-  const result = (data as any)?.data || data || { items: [], total: 0, totalPages: 0 };
+  const result = asPaginated<any>(data);
   const catData = (category as any)?.data || category;
-  const catList = (categories as any)?.data || categories || [];
+  const catList = asArray<any>(categories);
 
   const updateParams = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams);

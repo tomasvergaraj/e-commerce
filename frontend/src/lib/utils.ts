@@ -31,6 +31,45 @@ export function asArray<T>(value: unknown): T[] {
   return [];
 }
 
+export function normalizeApiUrl(value?: string | null) {
+  const apiUrl = (value || DEFAULT_API_URL).trim();
+
+  if (!apiUrl) {
+    return DEFAULT_API_URL;
+  }
+
+  if (apiUrl.startsWith('/')) {
+    return apiUrl;
+  }
+
+  if (ABSOLUTE_URL_PATTERN.test(apiUrl)) {
+    return apiUrl.startsWith('//') ? `https:${apiUrl}` : apiUrl;
+  }
+
+  return `https://${apiUrl.replace(/^\/+/, '')}`;
+}
+
+export function asPaginated<T>(value: unknown) {
+  const source = ((value as any)?.data ?? value ?? {}) as any;
+
+  if (Array.isArray(source)) {
+    return {
+      items: source as T[],
+      total: source.length,
+      totalPages: source.length > 0 ? 1 : 0,
+    };
+  }
+
+  const items = asArray<T>(source?.items ? source : value);
+
+  return {
+    ...source,
+    items,
+    total: typeof source?.total === 'number' ? source.total : items.length,
+    totalPages: typeof source?.totalPages === 'number' ? source.totalPages : (items.length > 0 ? 1 : 0),
+  };
+}
+
 function getRuntimeOrigin() {
   if (typeof window !== 'undefined') {
     return window.location.origin;
@@ -40,7 +79,7 @@ function getRuntimeOrigin() {
 }
 
 export function getApiOrigin() {
-  const apiUrl = (import.meta.env.VITE_API_URL || DEFAULT_API_URL).trim();
+  const apiUrl = normalizeApiUrl(import.meta.env.VITE_API_URL);
 
   if (ABSOLUTE_URL_PATTERN.test(apiUrl)) {
     return new URL(apiUrl, getRuntimeOrigin()).origin;

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { settingsApi } from '@/api/services';
 import { PageLoader } from '@/components/common/Loading';
+import { asArray } from '@/lib/utils';
 
 type CmsPage = {
   id: string;
@@ -171,17 +172,20 @@ export default function PageContent() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const page = ((data as any)?.data || data) as CmsPage | null;
+  const pageCandidate = (data as any)?.data || data;
+  const page = pageCandidate && typeof pageCandidate === 'object' ? (pageCandidate as CmsPage) : null;
   const settings = ((publicSettingsData as any)?.data || publicSettingsData || {}) as PublicSettings;
-  const publicPages = ((publicPagesData as any)?.data || publicPagesData || []) as PublicPageLink[];
+  const publicPages = asArray<PublicPageLink>(publicPagesData);
   const storeName = settings.store_name?.trim() || 'Nexo';
   const storeEmail = settings.store_email?.trim() || 'contacto@nexo.cl';
   const storePhone = settings.store_phone?.trim() || '+56 9 1234 5678';
   const storeAddress = settings.store_address?.trim() || 'Santiago, Chile';
 
-  const blocks = page ? parseContent(page.content, page.title) : [];
+  const pageTitle = typeof page?.title === 'string' ? page.title : 'Página informativa';
+  const pageContent = typeof page?.content === 'string' ? page.content : '';
+  const blocks = page ? parseContent(pageContent, pageTitle) : [];
   const intro = getIntro(blocks, page?.metaDesc);
-  const readingMinutes = page ? Math.max(1, Math.round(page.content.split(/\s+/).filter(Boolean).length / 180)) : 1;
+  const readingMinutes = page ? Math.max(1, Math.round(pageContent.split(/\s+/).filter(Boolean).length / 180)) : 1;
   const navigationItems = page
     ? (
       publicPages.some((item) => item.slug === page.slug)

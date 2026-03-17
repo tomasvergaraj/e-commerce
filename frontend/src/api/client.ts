@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { useAuthStore } from '@/stores/authStore';
+import { normalizeApiUrl } from '@/lib/utils';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = normalizeApiUrl(import.meta.env.VITE_API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
